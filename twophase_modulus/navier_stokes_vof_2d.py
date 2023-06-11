@@ -107,6 +107,8 @@ class NavierStokes_VOF(PDE):
         elif isinstance(rho2, (float, int)):
             rho2 = Number(rho2)
 
+        v_x = Function("v_x")(*input_variables)
+        p_x = Function("p_x")(*input_variables)
         # dynamic viscosity
         #mu1 = rho1 * nu1
         #mu2 = rho2 * nu2
@@ -118,7 +120,7 @@ class NavierStokes_VOF(PDE):
         rho = rho2 + (rho1 - rho2) * a        
 
         abs_interface_grad = sqrt(Pow(a.diff(x),2) + Pow(a.diff(y),2) + np.finfo(float).eps)
-        curvature = - ( (a.diff(x).diff(x) + a.diff(y).diff(y))/abs_interface_grad - (a.diff(x)**2*a.diff(x).diff(x) + a.diff(y)**2*a.diff(y).diff(y) + 2*a.diff(x)*a.diff(y)*(a.diff(x).diff(y) - a.diff(y).diff(x)))/Pow(abs_interface_grad, 3) )
+        curvature = - ( (a.diff(x).diff(x) + a.diff(y).diff(y))/abs_interface_grad - (a.diff(x)**2*a.diff(x).diff(x) + a.diff(y)**2*a.diff(y).diff(y) + 2*a.diff(x)*a.diff(y)*(a.diff(x).diff(y)))/Pow(abs_interface_grad, 3) )
         
         self.U_ref = U_ref
         self.L_ref = L_ref
@@ -136,6 +138,8 @@ class NavierStokes_VOF(PDE):
         self.equations['PDE_a'] = a.diff(t) + u*a.diff(x) + v*a.diff(y)
         self.equations['PDE_u'] = (u.diff(t) + u*u.diff(x) + v*u.diff(y))*rho/rho_ref + p.diff(x) - one_We*curvature*a.diff(x) - one_Re*(u.diff(x).diff(x) + u.diff(y).diff(y)) - 2.0*one_Re_x*u.diff(x) - one_Re_y*(u.diff(y) + v.diff(x)) 
         self.equations['PDE_v'] = (v.diff(t) + u*v.diff(x) + v*v.diff(y))*rho/rho_ref + p.diff(y) - one_We*curvature*a.diff(y) - one_Re*(v.diff(x).diff(x) + v.diff(y).diff(y)) - rho/rho_ref*one_Fr - 2.0*one_Re_y*v.diff(y) - one_Re_x*(u.diff(y) + v.diff(x)) 
+
+
         '''
         # set equations
         self.equations = {}
