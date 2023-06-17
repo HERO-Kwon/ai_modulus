@@ -1,7 +1,7 @@
 ## 다음과 같은 확장자는 전체 무시
 *.h5
 *.zip
-
+HC*.*
 ## 폴더 무시
 twophase_modulus/outputs
 examples-release_22.09
