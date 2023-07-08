@@ -28,5 +28,5 @@ batch_size:
   highres_interior: 800 #8000
   #symmetry: 8000
   no_slip: 100 #1200
-  #bd_pressure: 400
+  inlet: 400
   interface: 340 #3400

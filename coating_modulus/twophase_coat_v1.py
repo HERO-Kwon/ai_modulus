@@ -135,7 +135,7 @@ def run(cfg: ModulusConfig) -> None:
     inlet = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"u": 0, "v": 0, "a": 1},
+        outvar={"u": 0, "v": -1, "a": 1},
         batch_size=cfg.batch_size.inlet,
         criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
@@ -147,7 +147,7 @@ def run(cfg: ModulusConfig) -> None:
     plate = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"u": 0,"v":1},
+        outvar={"u": 1,"v":0},
         batch_size=cfg.batch_size.no_slip,
         criteria=Eq(y,0.0),
         parameterization=time_range,

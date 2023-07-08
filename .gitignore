@@ -3,5 +3,6 @@
 *.zip
 HC*.*
 ## 폴더 무시
+coating_modulus/outputs
 twophase_modulus/outputs
 examples-release_22.09
