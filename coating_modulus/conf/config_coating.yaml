@@ -18,15 +18,15 @@ scheduler:
   decay_steps: 3000
 
 training:
-  rec_results_freq : 1000
-  rec_constraint_freq: 1000
-  max_steps : 1000
+  rec_results_freq : 5000
+  rec_constraint_freq: 5000
+  max_steps : 5000
 
 batch_size:
-  initial_condition: 400 #4000
-  lowres_interior: 100 #400 #4000
-  highres_interior: 800 #8000
+  initial_condition: 1000
+  lowres_interior: 400 #4000
+  highres_interior: 5000
   #symmetry: 8000
-  no_slip: 100 #1200
-  #bd_pressure: 400
-  interface: 340 #3400
+  no_slip: 1000
+  inlet: 400
+  #interface: 3400
