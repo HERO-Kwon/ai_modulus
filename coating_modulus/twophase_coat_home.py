@@ -24,7 +24,7 @@ from modulus.utils.io import (
 from modulus.key import Key
 from modulus.node import Node
 from navier_stokes_vof_2d import NavierStokes_VOF
-from HC_geo import *
+from HC_geo_v1 import *
 
 
 '''
@@ -38,7 +38,7 @@ def run(cfg: ModulusConfig) -> None:
     time_window_size = 0.1
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
-    nr_time_windows = 119
+    nr_time_windows = 20
 
     # parameters
     rho1 = 100 # density
@@ -48,7 +48,7 @@ def run(cfg: ModulusConfig) -> None:
     sigma=24.5 #surface_tension_coeff 
     g = -0.98 # gravitational acceleration
     U_ref = 1.0
-    L_ref = 0.25
+    L_ref = 1.0
     
     # make navier stokes equations
     ns = NavierStokes_VOF(mus=(mu1,mu2), rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
@@ -60,7 +60,6 @@ def run(cfg: ModulusConfig) -> None:
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
         output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
-        periodicity={"x": channel_width},
         layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
@@ -75,10 +74,9 @@ def run(cfg: ModulusConfig) -> None:
     window_domain = Domain("window")
 
     # make initial condition
-    
     ic = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_f,
+        geometry=geo,
         outvar={
             "u": 0,
             "v": 0,
@@ -91,25 +89,10 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(ic, name="ic")
     
-    ic_b = PointwiseInteriorConstraint(
-        nodes=nodes,
-        geometry=mid_geo,
-        outvar={
-            "u": 0,
-            "v": 0,
-            "p": 0,
-            "a": 1,
-        },
-        batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        parameterization={t_symbol: 0},
-    )
-    ic_domain.add_constraint(ic_b, name="ic_b")
     # make constraint for matching previous windows initial condition
-
     ic_lowres = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_f,
+        geometry=geo,
         outvar={"u_prev_step_diff": 0, "v_prev_step_diff": 0, "a_prev_step_diff": 0},
         batch_size=cfg.batch_size.lowres_interior,
         lambda_weighting={
@@ -117,7 +100,6 @@ def run(cfg: ModulusConfig) -> None:
             "v_prev_step_diff": 100,
             "a_prev_step_diff": 100,
         },
-        #criteria=Or((y < highres_length[0]), y > (highres_length[1])),
         parameterization={t_symbol: 0},
     )
     window_domain.add_constraint(ic_lowres, name="ic_lowres")
@@ -140,37 +122,49 @@ def run(cfg: ModulusConfig) -> None:
     # boundary condition
     no_slip = PointwiseBoundaryConstraint(
         nodes=nodes,
-        geometry=left_geo,
+        geometry=geo,
         outvar={"u": 0, "v": 0,},
         batch_size=cfg.batch_size.no_slip,
-        criteria=(y < channel_length[1]),
+        criteria=And((y>0.0), Or(And((-1*Lu<x),(x<=0.0)),And((Lf<=x),(x<Ld+right_tri_height)))),
         parameterization=time_range,
     )
     ic_domain.add_constraint(no_slip, "no_slip")
     window_domain.add_constraint(no_slip, "no_slip")
 
-    # pressure boundary
-    bd_pressure = PointwiseBoundaryConstraint(
+    # inlet boundary
+    inlet = PointwiseBoundaryConstraint(
         nodes=nodes,
-        geometry=rec,
-        outvar={"u": 0, "v": 0, "p": 1},
-        batch_size=cfg.batch_size.no_slip,
-        criteria=Eq(y, channel_length[1]),
+        geometry=geo,
+        outvar={"u": 0, "v": 0, "a": 1},
+        batch_size=cfg.batch_size.inlet,
+        criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
     )
-    ic_domain.add_constraint(bd_pressure, "bd_pressure")
-    window_domain.add_constraint(bd_pressure, "bd_pressure")
+    ic_domain.add_constraint(inlet, "inlet")
+    window_domain.add_constraint(inlet, "inlet")
+
+    # moving plate
+    plate = PointwiseBoundaryConstraint(
+        nodes=nodes,
+        geometry=geo,
+        outvar={"u": 0,"v":1},
+        batch_size=cfg.batch_size.no_slip,
+        criteria=Eq(y,0.0),
+        parameterization=time_range,
+    )
+    ic_domain.add_constraint(plate, name="plate")
+    window_domain.add_constraint(plate, name="plate")
     
     
     # make interior constraint
     lowres_interior = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=rec,
+        geometry=geo,
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.lowres_interior,
         lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
-        criteria=Or((y < highres_length[0]), y > (highres_length[1])),
+        criteria=Or((x < -1*Lu), (x > Lf+Ld+right_tri_height)),
         parameterization=time_range,
     )
     ic_domain.add_constraint(lowres_interior, name="lowres_interior")
@@ -178,17 +172,17 @@ def run(cfg: ModulusConfig) -> None:
     
     highres_interior = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=rec,
+        geometry=geo,
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.highres_interior,
         lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
-        criteria=And((y >= highres_length[0]), y <= (highres_length[1])),
+        criteria=And((x >= -1*Lu), (x <= Lf+Ld+right_tri_height)),
         parameterization=time_range,
     )
     ic_domain.add_constraint(highres_interior, name="highres_interior")
     window_domain.add_constraint(highres_interior, name="highres_interior")
-    
+    '''
     interface = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=bubble,
@@ -200,12 +194,12 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(interface, name="interface")
     window_domain.add_constraint(interface, name="interface")
-    
+    '''
     
     # add inference data for time slices
     for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
         vtk_obj = VTKUniformGrid(
-            bounds=[(-0.5/L_ref, 0.5/L_ref), (-0.5/L_ref, 1.5/L_ref)],
+            bounds=[(-0.005/L_ref, (Lf+0.01)/L_ref), (0.0, 0.004/L_ref)],
             npoints=[128, 128],
             export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"]},
         )
