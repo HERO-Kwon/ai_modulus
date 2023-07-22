@@ -23,9 +23,10 @@ training:
   max_steps : 5000
 
 batch_size:
-  initial_condition: 1000
-  lowres_interior: 400 #4000
+  initial_condition: 5000
+  lowres_interior: 500 #4000
   highres_interior: 5000
   no_slip: 1000
-  inlet: 400
-  #interface: 340 #3400
+  inlet: 500
+  outlet: 1000
+  interface: 1000 #3400
