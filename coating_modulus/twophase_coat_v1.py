@@ -29,14 +29,21 @@ from HC_geo_v1 import *
 
 '''
 v0: 개발중
+<<<<<<< HEAD
 v1: 형상 완료. 0.01 초 간격 구동
+=======
+>>>>>>> 5d544bbdda42f495e0083830932333577a499553
 '''
 
 @modulus.main(config_path="conf", config_name="config_coating")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
+<<<<<<< HEAD
     time_window_size = 0.01
+=======
+    time_window_size = 0.1
+>>>>>>> 5d544bbdda42f495e0083830932333577a499553
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 20
