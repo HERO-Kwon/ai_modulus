@@ -35,7 +35,7 @@ v1_2: parameter 변경, density, viscosity, vin, uw
 v1_3: inferencer 해상도 축소, timestep 0.1, tension변경
 '''
 
-@modulus.main(config_path="conf", config_name="config_coating")
+@modulus.main(config_path="conf", config_name="config_coating1")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters

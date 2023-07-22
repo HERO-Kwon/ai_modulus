@@ -26,13 +26,6 @@ batch_size:
   initial_condition: 1000
   lowres_interior: 400 #4000
   highres_interior: 5000
-  #symmetry: 8000
-<<<<<<< HEAD
   no_slip: 1000
   inlet: 400
-  #interface: 3400
-=======
-  no_slip: 100 #1200
-  inlet: 400
-  interface: 340 #3400
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
+  #interface: 340 #3400
