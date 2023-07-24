@@ -24,53 +24,55 @@ from modulus.utils.io import (
 from modulus.key import Key
 from modulus.node import Node
 from navier_stokes_vof_2d import NavierStokes_VOF
-from HC_geo_v1 import *
+from HC_geo_v1_4 import *
 
 
 '''
 v0: 개발중
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 v1: 형상 완료. 0.01 초 간격 구동
-=======
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
-=======
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
-=======
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
+v1_1: colloc pnt x5 증가
+v1_2: parameter 변경, density, viscosity, vin, uw
+v1_3: inferencer 해상도 축소, timestep 0.1, tension변경
+v1_4: highres ic, initial filling, add outlet, noslip 범위조정
+v1_5: param 1 2 변경
+v1_6: interface 추가, 
+v1_7: L_ref=Lu, 시간 001
+v1_8: no inlet vel
+v1_9: initial weighting x100
+v1_10: time / l_ref, initial a weight 1
+v1_11: initial ic air 1 
+v1_12: test_twophase parameters
+v1_13: test_vof change
+v1_14: test_vof change, ic 0 1 change
 '''
 
-@modulus.main(config_path="conf", config_name="config_coating")
+@modulus.main(config_path="conf", config_name="config_coating1")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    time_window_size = 0.01
-=======
-    time_window_size = 0.1
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
-=======
-    time_window_size = 0.1
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
-=======
-    time_window_size = 0.1
->>>>>>> 5d544bbdda42f495e0083830932333577a499553
+    time_window_size = 0.01/L_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 20
 
     # parameters
-    rho1 = 100 # density
-    rho2 = 1000
-    mu1 = 1 #viscosity
-    mu2 = 10
+    '''
+    rho1 = 1000 # density
+    rho2 = 1.1614
+    mu1 = 1*rho1 #viscosity
+    mu2 = rho2*1.84e-05  # kg/m-s
+    sigma=0.06 #surface_tension_coeff 
+    g = -0.98 # gravitational acceleration
+    U_ref = 1.0
+    '''
+    # parameters
+    rho2 = 100 # density
+    rho1 = 1000
+    mu2 = 1 #viscosity
+    mu1 = 10
     sigma=24.5 #surface_tension_coeff 
     g = -0.98 # gravitational acceleration
     U_ref = 1.0
-    L_ref = 1.0
     
     # make navier stokes equations
     ns = NavierStokes_VOF(mus=(mu1,mu2), rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
@@ -96,7 +98,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain = Domain("window")
 
     # make initial condition
-    ic = PointwiseInteriorConstraint(
+    ic_air = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
         outvar={
@@ -107,16 +109,33 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
+        criteria=Or((x < 0.0), (x > Lf)),
         parameterization={t_symbol: 0},
     )
-    ic_domain.add_constraint(ic, name="ic")
-    
+    ic_domain.add_constraint(ic_air, name="ic_air")
+
+    ic_slurry = PointwiseInteriorConstraint(
+        nodes=nodes,
+        geometry=geo,
+        outvar={
+            "u": 0,
+            "v": 0,
+            "p": 0,
+            "a": 1,
+        },
+        batch_size=cfg.batch_size.initial_condition,
+        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
+        criteria=And((x >= 0.0), (x <= Lf)),
+        parameterization={t_symbol: 0},
+    )
+    ic_domain.add_constraint(ic_slurry, name="ic_slurry")    
+
     # make constraint for matching previous windows initial condition
-    ic_lowres = PointwiseInteriorConstraint(
+    ic_highres = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
         outvar={"u_prev_step_diff": 0, "v_prev_step_diff": 0, "a_prev_step_diff": 0},
-        batch_size=cfg.batch_size.lowres_interior,
+        batch_size=cfg.batch_size.highres_interior,
         lambda_weighting={
             "u_prev_step_diff": 100,
             "v_prev_step_diff": 100,
@@ -124,7 +143,7 @@ def run(cfg: ModulusConfig) -> None:
         },
         parameterization={t_symbol: 0},
     )
-    window_domain.add_constraint(ic_lowres, name="ic_lowres")
+    window_domain.add_constraint(ic_highres, name="ic_lowres")
     '''
     ic_highres = PointwiseInteriorConstraint(
         nodes=nodes,
@@ -147,7 +166,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo,
         outvar={"u": 0, "v": 0,},
         batch_size=cfg.batch_size.no_slip,
-        criteria=And((y>0.0), Or(And((-1*Lu<x),(x<=0.0)),And((Lf<=x),(x<Ld+right_tri_height)))),
+        criteria=And((y>0.0), Or(And((-1*left_tri_height-1*Lu<x),(x<=0.0)),And((Lf<=x),(x<Lf+Ld+right_tri_height)))),
         parameterization=time_range,
     )
     ic_domain.add_constraint(no_slip, "no_slip")
@@ -157,20 +176,34 @@ def run(cfg: ModulusConfig) -> None:
     inlet = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"u": 0, "v": -1, "a": 1},
+        outvar={"u": 0, "v": -0.016667, "a": 1},
         batch_size=cfg.batch_size.inlet,
+        lambda_weighting={"u": 10.0, "v": 10.0, "a":1.0},
         criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
     )
     ic_domain.add_constraint(inlet, "inlet")
     window_domain.add_constraint(inlet, "inlet")
 
+    outlet = PointwiseBoundaryConstraint(
+        nodes=nodes,
+        geometry=geo,
+        outvar={"p": 0},
+        batch_size=cfg.batch_size.outlet,
+        criteria=And((y>0.0), Or((-1*left_tri_height-1*Lu>x),(x>Lf+Ld+right_tri_height))),
+        parameterization=time_range,
+    )
+    ic_domain.add_constraint(outlet, "outlet")
+    window_domain.add_constraint(outlet, "outlet")
+    
+
     # moving plate
     plate = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"u": 1,"v":0},
+        outvar={"u": 0.067 ,"v":0},
         batch_size=cfg.batch_size.no_slip,
+        lambda_weighting={"u": 10.0, "v": 10.0},
         criteria=Eq(y,0.0),
         parameterization=time_range,
     )
@@ -204,40 +237,41 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(highres_interior, name="highres_interior")
     window_domain.add_constraint(highres_interior, name="highres_interior")
-    '''
+    
     interface = PointwiseBoundaryConstraint(
         nodes=nodes,
-        geometry=bubble,
-        outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0,"v":0.3/L_ref},
+        geometry=bottom_mid_rec,
+        outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0,"v":1.0},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
+        criteria=And((y < H0), (y > 0.0)),
         parameterization=time_range,
     )
     ic_domain.add_constraint(interface, name="interface")
     window_domain.add_constraint(interface, name="interface")
-    '''
+    
     
     # add inference data for time slices
-    for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
-        vtk_obj = VTKUniformGrid(
-            bounds=[(-0.005/L_ref, (Lf+0.01)/L_ref), (0.0, 0.004/L_ref)],
-            npoints=[128, 128],
-            export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"]},
-        )
-        grid_inference = PointVTKInferencer(
-            vtk_obj=vtk_obj,
-            nodes=nodes,
-            input_vtk_map={"x": "x", "y": "y"},
-            output_names=["u", "v", "p", "a"],
-            requires_grad=False,
-            invar={"t": np.full([128 ** 2, 1], specific_time)},
-            batch_size=100000,
-        )
-        ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(i).zfill(4))
-        window_domain.add_inferencer(
-            grid_inference, name="time_slice_" + str(i).zfill(4)
-        )
+    #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
+    vtk_obj = VTKUniformGrid(
+        bounds=[(-0.005/L_ref, (Lf+0.01/L_ref)), (0.0, 0.004/L_ref)],
+        npoints=[128, 128],
+        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"]},
+    )
+    grid_inference = PointVTKInferencer(
+        vtk_obj=vtk_obj,
+        nodes=nodes,
+        input_vtk_map={"x": "x", "y": "y"},
+        output_names=["u", "v", "p", "a"],
+        requires_grad=False,
+        invar={"t": np.full([128 ** 2, 1], 0)},
+        batch_size=100000,
+    )
+    ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(0).zfill(4))
+    window_domain.add_inferencer(
+        grid_inference, name="time_slice_" + str(0).zfill(4)
+    )
 
     # make solver
     slv = SequentialSolver(
