@@ -8,3 +8,4 @@ coating_modulus/outputs
 twophase_modulus/outputs
 examples-release_22.09
 coating_modulus/__pycache__
+twophase_modulus/__pycache__/navier_stokes_vof_2d.cpython-38.pyc

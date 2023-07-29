@@ -115,7 +115,7 @@ def run(cfg: ModulusConfig) -> None:
     fluid2 = rec - bubble
 
     # make network for current step and previous step
-    flow_net = FourierNetArch(
+    flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
         output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
         periodicity={"x": channel_width},
