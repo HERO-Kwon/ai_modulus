@@ -49,7 +49,7 @@ v2: test_vof initial coating
 v2_1: test_vof initial coating interface change
 v2_2: air-slurry change
 v2_3: no norm
-v2_4: norm 0.0005 gradagg 100
+v2_4: norm 0.0005 gradagg 2
 '''
 
 @modulus.main(config_path="conf", config_name="config_coating_v2_4")

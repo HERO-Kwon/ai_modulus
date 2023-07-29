@@ -21,13 +21,13 @@ training:
   rec_results_freq : 1000
   rec_constraint_freq: 1000
   max_steps : 10000
-  grad_agg_freq: 100
+  grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 5000
-  lowres_interior: 1000 #4000
-  highres_interior: 2000
-  no_slip: 1000
+  initial_condition: 1000
+  lowres_interior: 500 #4000
+  highres_interior: 1000
+  no_slip: 500
   inlet: 500
   outlet: 500
-  interface: 1000 #3400
+  interface: 500 #3400
