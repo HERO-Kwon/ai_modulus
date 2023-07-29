@@ -28,7 +28,7 @@ batch_size:
   lowres_interior: 500 #4000
   highres_interior: 1500
   no_slip: 500
-  inlet: 500
-  outlet: 500
+  inlet: 100
+  outlet: 100
   interface_left: 50 #3400
   interface_right: 500 #3400
