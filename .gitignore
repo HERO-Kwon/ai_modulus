@@ -2,6 +2,7 @@
 *.h5
 *.zip
 HC*.*
+*.pyc
 ## 폴더 무시
 coating_modulus/outputs
 twophase_modulus/outputs
