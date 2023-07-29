@@ -52,7 +52,7 @@ Desc: twophase 3-8
 3-9 코팅 물성 적용
 '''
 
-@modulus.main(config_path="conf", config_name="config_twophase3_2")
+@modulus.main(config_path="conf", config_name="config_twophase3_1")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
