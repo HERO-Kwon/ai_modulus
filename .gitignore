@@ -3,9 +3,12 @@
 *.zip
 HC*.*
 *.pyc
+-checkpoint.py
+-checkpoint.yaml
 ## 폴더 무시
 coating_modulus/outputs
 twophase_modulus/outputs
 examples-release_22.09
 coating_modulus/__pycache__
 twophase_modulus/__pycache__/navier_stokes_vof_2d.cpython-38.pyc
+coating_modulus/.ipynb_checkpoints
