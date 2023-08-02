@@ -47,9 +47,14 @@ class NavierStokes_VOF(PDE):
       momentum_y: -nu*v__x__x - nu*v__y__y + u*v__x + v*v__y - nu__x*v__x - nu__y*v__y + p__y
     """
 
+    '''
+    v4: add sheer rate and nu eq.
+    '''
+
     name = "NavierStokes_VOF"   
     #def __init__(self, mus=mus, rhos=rhos, sigma=sigma, g=g, U_ref=U_ref,L_ref=L_ref, dim=2, time=True, mixed_form=False):
     def __init__(self, mus, rhos, sigma, g, U_ref,L_ref, dim=2, time=True, mixed_form=False):
+
         # set params
         self.dim = dim
         self.time = time
@@ -57,10 +62,6 @@ class NavierStokes_VOF(PDE):
 
         # coordinates
         x, y = Symbol("x"), Symbol("y")
-        normal_x = Symbol("normal_x")
-        normal_y = Symbol("normal_y")
-        normal_z = Symbol("normal_z")
-
 
         # time
         t = Symbol("t")
@@ -117,6 +118,47 @@ class NavierStokes_VOF(PDE):
         #mu1 = rho1 * nu1
         #mu2 = rho2 * nu2
         
+        # normals
+        normal_x = -1 * Symbol(
+            "normal_x"
+        )  # Multiply by -1 to flip the direction of normal
+        normal_y = -1 * Symbol(
+            "normal_y"
+        )  # Multiply by -1 to flip the direction of normal
+        
+        # wall distance
+        normal_distance = Function("normal_distance")(*input_variables)
+        #normal_distance = Function("sdf")(*input_variables)
+
+        # sheer rate
+        u_parallel_to_wall = [
+            u - (u * normal_x + v * normal_y) * normal_x,
+            v - (u * normal_x + v * normal_y) * normal_y,
+        ]
+        du_parallel_to_wall_dx = [
+            u.diff(x) - (u.diff(x) * normal_x + v.diff(x) * normal_y) * normal_x,
+            v.diff(x) - (u.diff(x) * normal_x + v.diff(x) * normal_y) * normal_y,
+        ]
+        du_parallel_to_wall_dy = [
+            u.diff(y) - (u.diff(y) * normal_x + v.diff(y) * normal_y) * normal_x,
+            v.diff(y) - (u.diff(y) * normal_x + v.diff(y) * normal_y) * normal_y,
+        ]
+
+        du_dsdf = [
+            du_parallel_to_wall_dx[0] * normal_x + du_parallel_to_wall_dy[0] * normal_y,
+            du_parallel_to_wall_dx[1] * normal_x + du_parallel_to_wall_dy[1] * normal_y,
+        ]
+
+        # dynamic viscosity eq.
+        mu0 = 15
+        mu00 = 0.1
+        mu_lambda = 16
+        mu_a = 2
+        mu_n = 0.83
+        gamma_dot = sqrt(Pow(du_dsdf[0],2)+Pow(du_dsdf[1],2))
+        
+        mu2 = mu00 + (mu0-mu00)*Pow(1+Pow(mu_lambda*gamma_dot,mu_a),((mu_n-1)/mu_a))
+
         # vof eq
         mu = mu2 + (mu1 - mu2) * a
         mu_x = (mu1 - mu2) * a.diff(x)
@@ -136,6 +178,7 @@ class NavierStokes_VOF(PDE):
         one_We = self.sigma/(rho_ref*self.U_ref**2*self.L_ref)
         one_Fr = self.g*self.L_ref/self.U_ref**2 
         
+
         # set equations
         self.equations = {}
         self.equations['PDE_m'] = u.diff(x) + v.diff(y)
