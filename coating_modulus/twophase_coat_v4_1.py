@@ -1,6 +1,9 @@
 import torch
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
+import torch.nn as nn
+from torch import Tensor
+from typing import Dict
 
 from sympy import Symbol, Eq, Abs, sin, cos, Or, And
 
@@ -23,9 +26,8 @@ from modulus.utils.io import (
 )
 from modulus.key import Key
 from modulus.node import Node
-from navier_stokes_vof_2d import NavierStokes_VOF
-from slurry_dynamic_viscosity_eq import MuEquation
-from modulus.eq.pdes.basic import NormalDotVec
+from navier_stokes_vof_2d_v1 import NavierStokes_VOF
+from slurry_viscosity_eq import SlurryViscosity
 from HC_geo_v2_3 import *
 
 
@@ -58,20 +60,29 @@ v2_7: slurry 0 sdf loss
 v2_7_1: slurry 물성
 v2_8: slurry 물성 001 sec
 v3: 물성 변경, hires 영역 변경
-v4: 동점도 계산식 추가
+v3_1: lowres 영역 변경
+v3_2: inlet 부분 lowres 추가
+v4_1: dynanic viscosity, initial x
 '''
 
+class AlphaConverter(nn.Module):
+    def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        return {"alpha": torch.sigmoid(10*in_vars["a"])}
+'''
+class MuConverter(nn.Module):
+    def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        return {"mu2_out": (1-in_vars["alpha"])*in_vars["mu2"]}
+''' 
 @modulus.main(config_path="conf", config_name="config_coating_v3")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.01#/L_ref
+    time_window_size = 0.00001#/L_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
 
     # parameters
-    mu2 = Symbol("mu2")
     
     rho2 = 1000 # density
     rho1 = 1.18415
@@ -91,11 +102,9 @@ def run(cfg: ModulusConfig) -> None:
     U_ref = 1.0
     '''
     # make navier stokes equations
-    mueq = MuEquation(dim=2)
-    mu2 = mueq.equations["mu2"]
-    ns = NavierStokes_VOF(mus=(mu1,mu2), rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
-    normal_dot_vel = NormalDotVec(["u", "v"])
-
+    slurry_viscosity = SlurryViscosity(dim=2, time=True)
+    ns = NavierStokes_VOF(mu1,mu2=slurry_viscosity.equations["mu2"], rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+        
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")
 
@@ -105,49 +114,13 @@ def run(cfg: ModulusConfig) -> None:
         output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
         layer_size=256,
     )
-    mueq_net = instantiate_arch(
-        input_keys=[Key("u_in"), Key("y_in")],
-        output_keys=[Key("mu2")],
-        cfg=cfg.arch.fully_connected,
-    )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 
     # make nodes to unroll graph on
-    nodes = (ns.make_nodes() + normal_dot_vel.make_nodes()
-    + [time_window_net.make_node(name="time_window_network")])
-    nodes_mueq = (
-        [Node.from_sympy(Symbol("normal_distance"), "y_in")]
-        + [
-            Node.from_sympy(
-                (
-                    (
-                        Symbol("u")
-                        - (
-                            Symbol("u") * (-Symbol("normal_x"))
-                            + Symbol("v") * (-Symbol("normal_y"))
-                        )
-                        * (-Symbol("normal_x"))
-                    )
-                    ** 2
-                    + (
-                        Symbol("v")
-                        - (
-                            Symbol("u") * (-Symbol("normal_x"))
-                            + Symbol("v") * (-Symbol("normal_y"))
-                        )
-                        * (-Symbol("normal_y"))
-                    )
-                    ** 2
-                )
-                ** 0.5,
-                "u_parallel_to_wall",
-            )
-        ]
-        + [Node.from_sympy(Symbol("u_parallel_to_wall"), "u_in")]
-        + [Node.from_sympy(Symbol("mu2"), "mu2")]
-        + [mueq_net.make_node(name="mueq_network", optimize=False)]
-        + mueq.make_nodes()
-    )
+    nodes = (ns.make_nodes() + slurry_viscosity.make_nodes() 
+             + [Node(['a'], ['alpha'], AlphaConverter())] 
+             #+ [Node.from_sympy(Symbol("mu2")*Symbol("alpha"), "mu2_out")]
+             + [time_window_net.make_node(name="time_window_network")])
 
     # make initial condition domain
     ic_domain = Domain("initial_conditions")
@@ -158,7 +131,7 @@ def run(cfg: ModulusConfig) -> None:
     # make initial condition
     ic_air = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_uncoating,
+        geometry=geo,
         outvar={
             "u": 0,
             "v": 0,
@@ -167,23 +140,23 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=Or((x < 0.0), (x > Lf)),
+        criteria=Or((x < 0.0), (x > Lf), (y<H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
 
     ic_slurry = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_coating,
+        geometry=geo,
         outvar={
             "u": 0,
-            "v": 0,
+            "v": -1*v_in,
             "p": 0,
             "a": 0,
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=And((x >= 0.0), (x <= Lf)),
+        criteria=And((x > 0.0), (x < Lf), (y>H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_slurry, name="ic_slurry")    
@@ -283,7 +256,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_u": 10*Symbol("sdf"),
             "PDE_v": 10*Symbol("sdf"),
         },
-        criteria=Or((x<-1*Lu), And((x>(Lf+right_width)),(y>H0))),
+        criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
         parameterization=time_range,
     )
     ic_domain.add_constraint(lowres_interior, name="lowres_interior")
@@ -321,7 +294,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_u": 10*Symbol("sdf"),
             "PDE_v": 10*Symbol("sdf"),
         },
-        criteria=And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0),(y<right_ry)),
+        criteria=And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0)),
         parameterization=time_range,
     )
     ic_domain.add_constraint(highres_interior1, name="highres_interior1")
@@ -358,20 +331,20 @@ def run(cfg: ModulusConfig) -> None:
     vtk_obj = VTKUniformGrid(
         bounds=[(-0.005/L_ref, (Lf+0.01/L_ref)), (0.0, 0.004/L_ref)],
         npoints=[128, 128],
-        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"]},
+        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"]},
     )
     grid_inference = PointVTKInferencer(
         vtk_obj=vtk_obj,
         nodes=nodes,
         input_vtk_map={"x": "x", "y": "y"},
-        output_names=["u", "v", "p", "a"],
+        output_names=["u", "v", "p", "a","alpha"],
         requires_grad=False,
         invar={"t": np.full([128 ** 2, 1], 0)},
         batch_size=100000,
     )
-    ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(0).zfill(4))
+    ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(t_symbol).zfill(4))
     window_domain.add_inferencer(
-        grid_inference, name="time_slice_" + str(0).zfill(4)
+        grid_inference, name="time_slice_" + str(t_symbol).zfill(4)
     )
 
     # make solver
