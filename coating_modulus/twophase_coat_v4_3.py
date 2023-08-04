@@ -21,12 +21,14 @@ from modulus.domain.constraint import (
     PointwiseInteriorConstraint,
     IntegralBoundaryConstraint,
 )
+from modulus.domain.constraint import Constraint
 from modulus.domain.inferencer import PointVTKInferencer
 from modulus.utils.io import (
     VTKUniformGrid,
 )
 from modulus.key import Key
 from modulus.node import Node
+from modulus.graph import Graph
 from navier_stokes_vof_2d_v1 import NavierStokes_VOF
 from slurry_viscosity_eq import SlurryViscosity
 from HC_geo_v2_3 import *
@@ -64,23 +66,19 @@ v3: 물성 변경, hires 영역 변경
 v3_1: lowres 영역 변경
 v3_2: inlet 부분 lowres 추가
 v4_1: dynanic viscosity, initial x
-v4_2: intecon x
-v4_3: initial 조건 최적화
+v4_2: intecon (x)
+v4_3: initial 조건 최적화, viscosity scale, time scale, importance sampling(x)
 '''
 
 class AlphaConverter(nn.Module):
     def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
         return {"alpha": torch.sigmoid(10*in_vars["a"])}
-'''
-class MuConverter(nn.Module):
-    def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        return {"mu2_out": (1-in_vars["alpha"])*in_vars["mu2"]}
-''' 
+
 @modulus.main(config_path="conf", config_name="config_coating_v3")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.00001#/L_ref
+    time_window_size = 0.001/L_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -122,9 +120,33 @@ def run(cfg: ModulusConfig) -> None:
     # make nodes to unroll graph on
     nodes = (ns.make_nodes() + slurry_viscosity.make_nodes() 
              + [Node(['a'], ['alpha'], AlphaConverter())] 
-             #+ [Node.from_sympy(Symbol("mu2")*Symbol("alpha"), "mu2_out")]
              + [time_window_net.make_node(name="time_window_network")])
+    '''
+    # make importance model
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    importance_model_graph = Graph(
+        nodes,
+        invar=[Key("x"), Key("y")],
+        req_names=[
+            Key("u", derivatives=[Key("x")]),
+            Key("u", derivatives=[Key("y")]),
+            Key("v", derivatives=[Key("x")]),
+            Key("v", derivatives=[Key("y")]),
+        ],
+    ).to(device)
 
+    def importance_measure(invar):
+        outvar = importance_model_graph(
+            Constraint._set_device(invar, device=device, requires_grad=True)
+        )
+        importance = (
+            outvar["u__x"] ** 2
+            + outvar["u__y"] ** 2
+            + outvar["v__x"] ** 2
+            + outvar["v__y"] ** 2
+        ) ** 0.5 + 10
+        return importance.cpu().detach().numpy()
+    '''
     # make initial condition domain
     ic_domain = Domain("initial_conditions")
 
@@ -148,9 +170,9 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
 
-    ic_slurry = PointwiseInteriorConstraint(
+    ic_slurry_in = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo,
+        geometry=geo_coating,
         outvar={
             "u": 0,
             "v": -1*v_in,
@@ -162,7 +184,23 @@ def run(cfg: ModulusConfig) -> None:
         criteria=And((x > 0.0), (x < Lf), (y>H0)),
         parameterization={t_symbol: 0},
     )
-    ic_domain.add_constraint(ic_slurry, name="ic_slurry")    
+    ic_domain.add_constraint(ic_slurry_in, name="ic_slurry_in")    
+
+    ic_slurry_onplate = PointwiseInteriorConstraint(
+        nodes=nodes,
+        geometry=geo_coating,
+        outvar={
+            "u": Uw,
+            "v": 0,
+            "p": 0,
+            "a": 0,
+        },
+        batch_size=cfg.batch_size.initial_condition,
+        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
+        criteria=(y<hw),
+        parameterization={t_symbol: 0},
+    )
+    ic_domain.add_constraint(ic_slurry_onplate, name="ic_slurry_onplate")    
 
     # make constraint for matching previous windows initial condition
     ic_highres = PointwiseInteriorConstraint(
@@ -175,25 +213,26 @@ def run(cfg: ModulusConfig) -> None:
             "v_prev_step_diff": 100,
             "a_prev_step_diff": 100,
         },
+        criteria=And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),
         parameterization={t_symbol: 0},
     )
     window_domain.add_constraint(ic_highres, name="ic_lowres")
-    '''
-    ic_highres = PointwiseInteriorConstraint(
+
+    ic_lowres = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=rec,
+        geometry=geo,
         outvar={"u_prev_step_diff": 0, "v_prev_step_diff": 0, "a_prev_step_diff": 0},
-        batch_size=cfg.batch_size.highres_interior,
+        batch_size=cfg.batch_size.lowres_interior,
         lambda_weighting={
             "u_prev_step_diff": 100,
             "v_prev_step_diff": 100,
             "a_prev_step_diff": 100,
         },
-        criteria=And((y >= highres_length[0]), y <= (highres_length[1])),
+        criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
         parameterization={t_symbol: 0},
     )
-    window_domain.add_constraint(ic_highres, name="ic_highres")
-    '''
+    window_domain.add_constraint(ic_lowres, name="ic_lowres")
+
     # boundary condition
     no_slip = PointwiseBoundaryConstraint(
         nodes=nodes,
@@ -260,6 +299,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_v": 10*Symbol("sdf"),
         },
         criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
+        #importance_measure=importance_measure,
         parameterization=time_range,
     )
     ic_domain.add_constraint(lowres_interior, name="lowres_interior")
@@ -279,6 +319,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_v": 10*Symbol("sdf"),
         },
         criteria=And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),
+        #importance_measure=importance_measure,
         parameterization=time_range,
     )
     ic_domain.add_constraint(highres_interior, name="highres_interior")
@@ -329,6 +370,7 @@ def run(cfg: ModulusConfig) -> None:
     ic_domain.add_constraint(interface_right, name="interface_right")
     window_domain.add_constraint(interface_right, name="interface_right")
     
+    '''
     # integral continuity
     def integral_criteria(invar, params):
         sdf = geo.sdf(invar, params)
@@ -345,12 +387,16 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity, "integral_continuity")
     window_domain.add_constraint(integral_continuity, "integral_continuity")
-
+    '''
 
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
+    def mask_fn(x, y):
+        sdf = geo.sdf({"x": x, "y": y}, {})
+        return sdf["sdf"] < 0
+    
     vtk_obj = VTKUniformGrid(
-        bounds=[(-0.005/L_ref, (Lf+0.01/L_ref)), (0.0, 0.004/L_ref)],
+        bounds=[(-1*left_width, (Lf+right_width)), (0.0, right_height)],
         npoints=[128, 128],
         export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"]},
     )
@@ -360,6 +406,7 @@ def run(cfg: ModulusConfig) -> None:
         input_vtk_map={"x": "x", "y": "y"},
         output_names=["u", "v", "p", "a","alpha"],
         requires_grad=False,
+        mask_fn=mask_fn,
         invar={"t": np.full([128 ** 2, 1], 0)},
         batch_size=100000,
     )
