@@ -1,4 +1,5 @@
-from modulus.geometry.primitives_2d import Rectangle, Triangle, Circle
+from modulus.geometry.primitives_2d import Rectangle, Triangle, Circle, Line
+from modulus.geometry import Parameterization, Parameter
 from a_params_v4 import *
 
 '''
@@ -119,3 +120,11 @@ geo_coating = bottom_left_coating + bottom_right_coating + mid_rec + bottom_mid_
 geo_uncoating = bottom_left_uncoating + bottom_right_uncoating
 
 geo = geo_coating + geo_uncoating
+
+x_pos = Parameter("x_pos")
+integral_line = Line(
+    (x_pos, 0),
+    (x_pos, hw),
+    1,
+    parameterization=Parameterization({x_pos: (right_rx,(Lf+right_width))}),
+)
