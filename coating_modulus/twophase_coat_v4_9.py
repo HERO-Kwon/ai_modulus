@@ -152,8 +152,8 @@ def run(cfg: ModulusConfig) -> None:
             "a": 1,
         },
         batch_size=cfg.batch_size.initial_condition,
-        #lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        criteria=Or((x < 0.0), (x > Lf)),
+        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
+        #criteria=Or((x < 0.0), (x > Lf)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
