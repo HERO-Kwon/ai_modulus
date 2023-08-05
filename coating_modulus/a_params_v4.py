@@ -32,6 +32,7 @@ nd_fluid_diffusivity = nd_fluid_conductivity / (
 rho2 = 1000 # density
 rho1 = 1.18415
 mu1 = 1.85508e-05  # kg/m-s
+mu2 = 3.5
 sigma=0.06 #surface_tension_coeff 
 g = -9.8 # gravitational acceleration
 
