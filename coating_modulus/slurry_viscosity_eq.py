@@ -42,9 +42,15 @@ class SlurryViscosity(PDE):
         self.dim = dim
         self.time = time
 
+        # params
+        L_ref = 0.0005
+        U_ref = 1.0
+        time_scale = L_ref / U_ref
+        viscosity_scale = L_ref ** 2 / time_scale
+
         # model coefficients
-        self.mu0 = 15
-        self.mu00 = 0.1
+        self.mu0 = 15  / viscosity_scale
+        self.mu00 = 0.1  / viscosity_scale
         self.mu_lambda = 16
         self.mu_a = 2
         self.mu_n = 0.83
@@ -70,15 +76,9 @@ class SlurryViscosity(PDE):
         else:
             w = Number(0)
 
-        # params
-        L_ref = 0.0005
-        U_ref = 1.0
-        time_scale = L_ref / U_ref
-
         # slurry eq
         gamma_dot = sqrt(Pow(u.diff(y),2)+Pow(v.diff(x),2))
-        viscosity_scale = L_ref ** 2 / time_scale
         
         # set equations
         self.equations = {}
-        self.equations["mu2"] = self.mu00 + (self.mu0-self.mu00)*Pow(1+Pow(self.mu_lambda*gamma_dot,self.mu_a),((self.mu_n-1)/self.mu_a)) / viscosity_scale
+        self.equations["mu2"] = self.mu00 + (self.mu0-self.mu00)*Pow(1+Pow(self.mu_lambda*gamma_dot,self.mu_a),((self.mu_n-1)/self.mu_a))
