@@ -81,7 +81,7 @@ v4_8: timestep 1, inlet hires
 v4_9: mu2 inference
 v4_10: timestep 001
 v4_11: timestep 01, (sl_vis,mu) a 
-v4_12: timestep 001, mu2 no a ref_visco, interior weight 1
+v4_12: timestep 001, mu2 no a ref_visco, interior weight 1, l_ref0002
 '''
 
 class AlphaConverter(nn.Module):

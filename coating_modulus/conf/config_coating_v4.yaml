@@ -14,9 +14,6 @@ arch:
     fully_connected:
         adaptive_activations: true
 
-optimizer:
-  lr: 0.1
-  
 scheduler:
   decay_rate: 0.95
   decay_steps: 3000
