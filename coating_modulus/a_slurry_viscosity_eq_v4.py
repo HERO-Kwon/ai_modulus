@@ -1,4 +1,4 @@
-from sympy import Symbol, Function, sqrt, Number, Min, Pow, sqrt
+from sympy import Symbol, Function, sqrt, Number, Min, Pow, sqrt, Abs
 
 from modulus.eq.pde import PDE
 from a_params_v4 import *
@@ -27,7 +27,7 @@ class SlurryViscosity(PDE):
 
         # time
         t = Symbol("t")
-
+        a = Symbol("a")
         # make input variables
         input_variables = {"x": x, "y": y, "z": z, "t": t}
         if self.dim == 2:
