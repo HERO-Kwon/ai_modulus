@@ -3,17 +3,18 @@ defaults :
   - arch:
       - fully_connected
   - scheduler: tf_exponential_lr
-  - optimizer: adam #bfgs #adam
+  - optimizer: bfgs # sadam
   - loss: sum
   - _self_
-
 
 jit: false
 
 arch:
     fully_connected:
         adaptive_activations: true
-
+        activation_fn: "stan"
+#optimizer:
+#  lr: 1e-5
 scheduler:
   decay_rate: 0.95
   decay_steps: 3000
