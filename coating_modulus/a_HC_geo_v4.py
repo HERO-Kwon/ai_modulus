@@ -18,8 +18,8 @@ left_height=0.0025 / L_ref
 left_width=0.005 / L_ref
 right_width=0.01 / L_ref
 
-v_in = 0.016667 #m/s
-Uw = 4/60 #m/s
+v_in = 0.016667 / U_ref #m/s
+Uw = 4/60 / U_ref #m/s
 hw = v_in*Lf/Uw
 
 # circle_doe0
