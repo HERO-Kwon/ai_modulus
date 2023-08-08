@@ -36,14 +36,3 @@ batch_size:
   interface_left: 500 #3400
   interface_right: 2000 #3400
   integral_continuity: 500
-
-  '''
-batch_size:
-  initial_condition: 3000
-  lowres_interior: 400 #4000
-  highres_interior: 3000
-  #symmetry: 8000
-  no_slip: 1200
-  #bd_pressure: 400
-  interface: 3400
-  '''
