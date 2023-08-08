@@ -112,7 +112,7 @@ class NormalDotVec(PDE):
 
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v4_gcp")
+@modulus.main(config_path="conf", config_name="config_coating_v4_1_gcp")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
