@@ -12,9 +12,9 @@ jit: false
 arch:
     fully_connected:
         adaptive_activations: true
-#        activation_fn: "stan"
-#optimizer:
-#  lr: 1e-5
+        activation_fn: "stan"
+optimizer:
+  lr: 1e-1
 scheduler:
   decay_rate: 0.95
   decay_steps: 3000
@@ -22,17 +22,16 @@ scheduler:
 training:
   rec_results_freq : 1000
   rec_constraint_freq: 1000
-  max_steps : 3000
+  max_steps : 5000
   #grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 1500
-  lowres_interior: 500 #4000
-  highres_interior: 1500
-  highres_interior1: 300
-  no_slip: 500
-  inlet: 100
-  outlet: 500
-  interface_left: 50 #3400
-  interface_right: 500 #3400
-  integral_continuity: 100
+  initial_condition: 150
+  lowres_interior: 50 #4000
+  highres_interior: 200
+  no_slip: 50
+  inlet: 50
+  outlet: 50
+  interface_left: 5 #3400
+  interface_right: 50 #3400
+  integral_continuity: 10

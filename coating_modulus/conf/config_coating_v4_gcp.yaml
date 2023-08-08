@@ -12,9 +12,9 @@ jit: false
 arch:
     fully_connected:
         adaptive_activations: true
-        activation_fn: "stan"
-optimizer:
-  lr: 1e-5
+#        activation_fn: "stan"
+#optimizer:
+#  lr: 1e-5
 scheduler:
   decay_rate: 0.95
   decay_steps: 3000

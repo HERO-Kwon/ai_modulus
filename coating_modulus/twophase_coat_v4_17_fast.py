@@ -85,8 +85,9 @@ v4_12: timestep 001, mu2 no a ref_visco, interior weight 1, l_ref0002
 v4_13: ts 0001, mu infer, lref=uref
 v4_14: stan, bfgs, weight change
  - gcp: no ini coating
-v4_15: default opt act, sl vis norm
- - gcp: sl vis norm
+v4_15: default opt act, vis eq norm
+v4_16: no sqrt fraude, pde uv 0.001, m 0.1 
+v4_17: highres input, pde uv 1e-5
 '''
 
 class AlphaConverter(nn.Module):
@@ -111,11 +112,11 @@ class NormalDotVec(PDE):
 
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v4")
+@modulus.main(config_path="conf", config_name="config_coating_v4_fast")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.0001 / t_ref
+    time_window_size = 0.001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -181,7 +182,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 1,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": 1, "v": 1, "p": 100, "a": 100},
+        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
         #criteria=Or((x < 0.0), (x > Lf)),
         parameterization={t_symbol: 0},
     )
@@ -197,7 +198,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 0,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": 1, "v": 1, "p": 100, "a": 100},
+        lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
         #criteria=And((x > 0.0), (x < Lf)),
         parameterization={t_symbol: 0},
     )
@@ -214,7 +215,7 @@ def run(cfg: ModulusConfig) -> None:
             "v_prev_step_diff": 100,
             "a_prev_step_diff": 100,
         },
-        criteria=And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),
+        criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>0),(x<Lf)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
         parameterization={t_symbol: 0},
     )
     window_domain.add_constraint(ic_highres, name="ic_highres")
@@ -229,7 +230,7 @@ def run(cfg: ModulusConfig) -> None:
             "v_prev_step_diff": 100,
             "a_prev_step_diff": 100,
         },
-        criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
+        criteria=Or((x<-1*Lu), And((x>(Lf+right_rx)),(y>H0))),
         parameterization={t_symbol: 0},
     )
     window_domain.add_constraint(ic_lowres, name="ic_lowres")
@@ -294,12 +295,12 @@ def run(cfg: ModulusConfig) -> None:
         batch_size=cfg.batch_size.lowres_interior,
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
         lambda_weighting={
-            "PDE_m": 1,#Symbol("sdf"),
-            "PDE_a": 10,#Symbol("sdf"),
-            "PDE_u": 1,#*Symbol("sdf"),
-            "PDE_v": 1,#*Symbol("sdf"),
+            "PDE_m": Symbol("sdf"),
+            "PDE_a": Symbol("sdf"),
+            "PDE_u": 1e-5*Symbol("sdf"),
+            "PDE_v": 1e-5*Symbol("sdf"),
         },
-        criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
+        criteria=Or((x<-1*Lu), And((x>(Lf+right_rx)),(y>H0))),
         parameterization=time_range,
     )
     ic_domain.add_constraint(lowres_interior, name="lowres_interior")
@@ -314,17 +315,17 @@ def run(cfg: ModulusConfig) -> None:
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
-            "PDE_a": 10*Symbol("sdf"),
-            "PDE_u": Symbol("sdf"),
-            "PDE_v": Symbol("sdf"),
+            "PDE_a": Symbol("sdf"),
+            "PDE_u": 1e-5*Symbol("sdf"),
+            "PDE_v": 1e-5*Symbol("sdf"),
         },
-        criteria=And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),
+        criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>0),(x<Lf)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
         importance_measure=importance_measure,
         parameterization=time_range,
     )
     ic_domain.add_constraint(highres_interior, name="highres_interior")
     window_domain.add_constraint(highres_interior, name="highres_interior")
-    
+    '''
     highres_interior1 = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
@@ -334,9 +335,9 @@ def run(cfg: ModulusConfig) -> None:
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
-            "PDE_a": 10*Symbol("sdf"),
-            "PDE_u": Symbol("sdf"),
-            "PDE_v": Symbol("sdf"),
+            "PDE_a": Symbol("sdf"),
+            "PDE_u": 1e-5*Symbol("sdf"),
+            "PDE_v": 1e-5*Symbol("sdf"),
         },
         criteria=And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0)),
         importance_measure=importance_measure,
@@ -344,14 +345,14 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(highres_interior1, name="highres_interior1")
     window_domain.add_constraint(highres_interior1, name="highres_interior1")
-
+    '''
     interface_left = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo_coating,
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface_left,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 10.0,   "PDE_u": 1.0, "PDE_v": 1.0},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-5, "PDE_v": 1e-5},
         criteria=And((x < 0.0), (y > 0.0), (y<H0)),
         importance_measure=importance_measure,
         parameterization=time_range,
@@ -365,7 +366,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface_right,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 10.0,   "PDE_u": 1.0, "PDE_v": 1.0},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-5, "PDE_v": 1e-5},
         criteria=And((x>(Lf+Ld)),(x<(Lf+right_width)),(y > 0.0)),
         importance_measure=importance_measure,
         parameterization=time_range,

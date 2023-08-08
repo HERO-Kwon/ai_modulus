@@ -44,7 +44,7 @@ class SlurryViscosity(PDE):
             w = Number(0)
 
         # slurry eq
-        gamma_dot = sqrt(Pow(u.diff(y),2)+Pow(v.diff(x),2))
+        gamma_dot = 1/t_ref * sqrt(Pow(u.diff(y),2)+Pow(v.diff(x),2))
         
         # set equations
         self.equations = {}

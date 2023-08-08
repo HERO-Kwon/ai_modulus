@@ -85,8 +85,7 @@ v4_12: timestep 001, mu2 no a ref_visco, interior weight 1, l_ref0002
 v4_13: ts 0001, mu infer, lref=uref
 v4_14: stan, bfgs, weight change
  - gcp: no ini coating
-v4_15: default opt act, sl vis norm
- - gcp: sl vis norm
+v4_15: default opt act, vis eq norm
 '''
 
 class AlphaConverter(nn.Module):
