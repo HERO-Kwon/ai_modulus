@@ -29,7 +29,7 @@ batch_size:
   initial_condition: 1500
   lowres_interior: 500 #4000
   highres_interior: 1500
-  highres_interior1: 300
+  #highres_interior1: 300
   no_slip: 500
   inlet: 100
   outlet: 500

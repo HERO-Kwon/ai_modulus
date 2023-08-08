@@ -88,6 +88,7 @@ v4_14: stan, bfgs, weight change
 v4_15: default opt act, vis eq norm
 v4_16: no sqrt fraude, pde uv 0.001, m 0.1 
 v4_17: highres input, pde uv 1e-5
+v4_18: pde uv 1e-10
 '''
 
 class AlphaConverter(nn.Module):
@@ -112,11 +113,11 @@ class NormalDotVec(PDE):
 
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v4_fast")
+@modulus.main(config_path="conf", config_name="config_coating_v4")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.001 / t_ref
+    time_window_size = 0.01 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -297,8 +298,8 @@ def run(cfg: ModulusConfig) -> None:
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
             "PDE_a": Symbol("sdf"),
-            "PDE_u": 1e-7*Symbol("sdf"),
-            "PDE_v": 1e-7*Symbol("sdf"),
+            "PDE_u": 1e-10*Symbol("sdf"),
+            "PDE_v": 1e-10*Symbol("sdf"),
         },
         criteria=Or((x<-1*Lu), And((x>(Lf+right_rx)),(y>H0))),
         parameterization=time_range,
@@ -316,8 +317,8 @@ def run(cfg: ModulusConfig) -> None:
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
             "PDE_a": Symbol("sdf"),
-            "PDE_u": 1e-7*Symbol("sdf"),
-            "PDE_v": 1e-7*Symbol("sdf"),
+            "PDE_u": 1e-10*Symbol("sdf"),
+            "PDE_v": 1e-10*Symbol("sdf"),
         },
         criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>0),(x<Lf)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
         importance_measure=importance_measure,
@@ -352,7 +353,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface_left,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-7, "PDE_v": 1e-7},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-10, "PDE_v": 1e-10},
         criteria=And((x < 0.0), (y > 0.0), (y<H0)),
         importance_measure=importance_measure,
         parameterization=time_range,
@@ -366,7 +367,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface_right,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-7, "PDE_v": 1e-7},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1e-10, "PDE_v": 1e-10},
         criteria=And((x>(Lf+Ld)),(x<(Lf+right_width)),(y > 0.0)),
         importance_measure=importance_measure,
         parameterization=time_range,
