@@ -91,7 +91,7 @@ def run(cfg: ModulusConfig) -> None:
     nr_time_windows = 200
 
     # make navier stokes equations
-    ns = NavierStokes_VOF(mus=(mu1,mu2), rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+    ns = NavierStokes_VOF(mu1,mu2, rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
 
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")
@@ -107,7 +107,6 @@ def run(cfg: ModulusConfig) -> None:
     # make nodes to unroll graph on
     nodes = (ns.make_nodes()
              + [Node(['a'], ['alpha'], AlphaConverter())] 
-             + [Node(['mu2','a'], ['mu'], MuCalc())] 
              + [time_window_net.make_node(name="time_window_network")])    
 
     # make initial condition domain
@@ -323,13 +322,13 @@ def run(cfg: ModulusConfig) -> None:
     vtk_obj = VTKUniformGrid(
         bounds=[(-1*left_width, (Lf+right_width)), (0.0, right_height)],
         npoints=[128, 128],
-        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
+        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"]},
     )
     grid_inference = PointVTKInferencer(
         vtk_obj=vtk_obj,
         nodes=nodes,
         input_vtk_map={"x": "x", "y": "y"},
-        output_names=["u", "v", "p", "a","alpha","mu"],
+        output_names=["u", "v", "p", "a","alpha"],
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,
