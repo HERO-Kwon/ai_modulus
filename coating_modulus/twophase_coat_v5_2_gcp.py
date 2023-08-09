@@ -106,7 +106,7 @@ def run(cfg: ModulusConfig) -> None:
     nr_time_windows = 200
 
     # make navier stokes equations
-    ns = NavierStokes_VOF(mus=(mu1,mu2), rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+    ns = NavierStokes_VOF(mu1,mu2, rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
 
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")
