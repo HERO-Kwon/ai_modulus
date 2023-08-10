@@ -129,6 +129,7 @@ def run(cfg: ModulusConfig) -> None:
 
     # make nodes to unroll graph on
     nodes = (ns.make_nodes() + slurry_viscosity.make_nodes() 
+             + normal_dot_vel.make_nodes()
              + [Node(['a'], ['alpha'], AlphaConverter())] 
              + [Node(['mu2','a'], ['mu'], MuCalc())] 
              + [time_window_net.make_node(name="time_window_network")])    
