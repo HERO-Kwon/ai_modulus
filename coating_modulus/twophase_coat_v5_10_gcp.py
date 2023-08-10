@@ -85,6 +85,7 @@ v5_8: silu + norm .002 .01 + bf
 v5_9: silu + norm .0002 .1 + ts 001 sec
  -gcp: norm .002 .01
 v5_10L v5_9 + stan
+ -gcp: 5_10+homoscedastic l
 '''
 
 
@@ -107,7 +108,7 @@ class NormalDotVec(PDE):
             self.equations["normal_dot_vel"] += Abs(1-a)*Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v5")
+@modulus.main(config_path="conf", config_name="config_coating_v5_gcp")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters

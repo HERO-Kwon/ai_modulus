@@ -4,7 +4,7 @@ defaults :
       - fully_connected
   - scheduler: tf_exponential_lr
   - optimizer: adam
-  - loss: sum
+  - loss: homoscedastic
   - _self_
 
 jit: false
@@ -12,7 +12,7 @@ jit: false
 arch:
     fully_connected:
         adaptive_activations: true
-        activation_fn: "stan"
+        #activation_fn: "stan"
 
 scheduler:
   decay_rate: 0.95
