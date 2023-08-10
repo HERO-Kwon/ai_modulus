@@ -3,7 +3,7 @@ defaults :
   - arch:
       - fully_connected
   - scheduler: tf_exponential_lr
-  - optimizer: bfgs #adam
+  - optimizer: adam
   - loss: sum
   - _self_
 

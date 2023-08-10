@@ -37,8 +37,8 @@ sigma=0.06 #surface_tension_coeff
 g = -9.8 # gravitational acceleration
 
 # normalize params
-length_scale = 0.002  # m
-velocity_scale = 0.01  # m/s
+length_scale = 0.0002  # m
+velocity_scale = 1.0  # m/s
 time_scale = length_scale / velocity_scale  # s
 density_scale = rho2  # kg/m3
 viscosity_scale = length_scale ** 2 / time_scale
