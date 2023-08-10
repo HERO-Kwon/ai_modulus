@@ -31,7 +31,7 @@ from modulus.node import Node
 from modulus.graph import Graph
 from modulus.eq.pde import PDE
 
-from a_params_v4 import *
+from a_params_v4_gcp import *
 from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF
 from a_slurry_viscosity_eq_v4 import SlurryViscosity
 from a_HC_geo_v4 import *
