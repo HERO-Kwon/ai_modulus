@@ -38,7 +38,7 @@ g = -9.8 # gravitational acceleration
 
 # normalize params
 length_scale = 0.002  # m
-velocity_scale = 0.1  # m/s
+velocity_scale = 0.01  # m/s
 time_scale = length_scale / velocity_scale  # s
 density_scale = rho2  # kg/m3
 viscosity_scale = length_scale ** 2 / time_scale
