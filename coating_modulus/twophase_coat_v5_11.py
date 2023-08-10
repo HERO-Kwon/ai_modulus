@@ -86,6 +86,8 @@ v5_9: silu + norm .0002 .1 + ts 001 sec
  -gcp: norm .002 .01
 v5_10L v5_9 + stan
  -gcp: 5_10+silu+homoscedastic l
+v5_11: v_5_10g + mu norm
+ -gcp: norm .002 .01
 '''
 
 
