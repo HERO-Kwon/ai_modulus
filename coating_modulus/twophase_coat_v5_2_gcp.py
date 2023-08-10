@@ -72,8 +72,10 @@ v5: v3_2, all eq
  - gcp: no eq norm
 v5_1: v5_gcp + norm
  - gcp: v5_gcp + intecon imp spl
- v5_2: v5_1_gcp + dyn vis
+ v5_2: v5_1_gcp + dyn vis(x)
  - gcp: a_v4 params
+v5_3: v5_2_gcp + dyn vis
+ - gcp: tanh act
 '''
 
 

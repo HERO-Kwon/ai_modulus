@@ -30,11 +30,11 @@ from modulus.key import Key
 from modulus.node import Node
 from modulus.graph import Graph
 from modulus.eq.pde import PDE
-from HC_geo_v2_3 import *
 
+from a_params_v4 import *
 from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF
 from a_slurry_viscosity_eq_v4 import SlurryViscosity
-
+from a_HC_geo_v4 import *
 
 '''
 v0: 개발중
@@ -71,9 +71,11 @@ v3_2: inlet 부분 lowres 추가
 v5: v3_2, all eq
  - gcp: no eq norm
 v5_1: v5_gcp + norm
- - gcp: v5_gcp + intecon imp spl
-v5_2: v5_1_gcp + dyn vis (x)
+ - gcp: v5_gcp + intecon(x) imp spl
+ v5_2: v5_1_gcp + dyn vis(x)
  - gcp: a_v4 params
+v5_3: v5_2_gcp + dyn vis
+ - gcp: v5_3 + intecon
 '''
 
 
@@ -105,28 +107,12 @@ def run(cfg: ModulusConfig) -> None:
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
 
-    # parameters
-    
-    rho2 = 1000 # density
-    rho1 = 1.18415
-    mu2 = 3.5 #viscosity
-    mu1 = 1.85508e-05  # kg/m-s
-    sigma=0.06 #surface_tension_coeff 
-    g = -9.8 # gravitational acceleration
-    U_ref = 1.0
-    '''
-    # parameters
-    rho1 = 100 # density
-    rho2 = 1000
-    mu1 = 1 #viscosity
-    mu2 = 10
-    sigma=24.5 #surface_tension_coeff 
-    g = -0.98 # gravitational acceleration
-    U_ref = 1.0
-    '''
     # make navier stokes equations
+    ns = NavierStokes_VOF(mu1,mu2, rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
     slurry_viscosity = SlurryViscosity(dim=2, time=True)
-    ns = NavierStokes_VOF(mu1,mu2=slurry_viscosity.equations["mu2"], rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+    ns = NavierStokes_VOF(mu1=mu1,mu2=slurry_viscosity.equations["mu2"], rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+    #ns = NavierStokes_VOF(mu1=mu1,mu2=mu2, rhos=(rho1,rho2), sigma=sigma, g=g, U_ref=U_ref, L_ref=L_ref, dim=2, time=True)
+    normal_dot_vel = NormalDotVec(["u", "v"])
 
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")
@@ -141,6 +127,7 @@ def run(cfg: ModulusConfig) -> None:
 
     # make nodes to unroll graph on
     nodes = (ns.make_nodes()
+             + normal_dot_vel.make_nodes()
              + [Node(['a'], ['alpha'], AlphaConverter())] 
              + [time_window_net.make_node(name="time_window_network")])    
     # make importance model
@@ -368,6 +355,34 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(interface_right, name="interface_right")
     window_domain.add_constraint(interface_right, name="interface_right")
+    
+    
+    
+    # integral continuity
+    integral_continuity = IntegralBoundaryConstraint(
+        nodes=nodes,
+        geometry=integral_line,
+        outvar={"normal_dot_vel": v_in*Lf},
+        batch_size=3,
+        integral_batch_size=cfg.batch_size.integral_continuity,
+        lambda_weighting={"normal_dot_vel": 0.1},
+        parameterization={Symbol("t"): (0, time_window_size), Parameter("x_pos"): (right_rx,(Lf+right_width))}
+    )
+    ic_domain.add_constraint(integral_continuity, "integral_continuity")
+    window_domain.add_constraint(integral_continuity, "integral_continuity")
+    
+    integral_continuity_in = IntegralBoundaryConstraint(
+        nodes=nodes,
+        geometry=mid_rec,
+        outvar={"normal_dot_vel": v_in*Lf},
+        batch_size=1,
+        integral_batch_size=cfg.batch_size.integral_continuity,
+        lambda_weighting={"normal_dot_vel": 0.1},
+        criteria=Eq(y,H0),
+        parameterization={Symbol("t"): (0, time_window_size)}
+    )
+    ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
+    window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
