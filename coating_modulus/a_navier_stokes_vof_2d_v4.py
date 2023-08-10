@@ -119,9 +119,9 @@ class NavierStokes_VOF(PDE):
         self.L_ref = L_ref
         self.rho_ref = rho_ref
 
-        mu = (mu2 + (mu1 - mu2) * a ) / viscosity_scale
-        mu_x = (mu1 - mu2) * a.diff(x)/ viscosity_scale
-        mu_y = (mu1 - mu2) * a.diff(y)/ viscosity_scale
+        mu = (mu2 + (mu1 - mu2) * a ) 
+        mu_x = (mu1 - mu2) * a.diff(x)
+        mu_y = (mu1 - mu2) * a.diff(y)
         rho = rho2 + (rho1 - rho2) * a        
 
         abs_interface_grad = sqrt(Pow(a.diff(x),2) + Pow(a.diff(y),2) + np.finfo(float).eps)
