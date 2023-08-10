@@ -76,6 +76,8 @@ v5_1: v5_gcp + norm
  - gcp: a_v4 params
 v5_3: v5_2_gcp + dyn vis
  - gcp: v5_3 + intecon
+v5_4: v5_3_gcp + real 0001 sec
+ - gcp: norm 0002 001
 '''
 
 
@@ -126,7 +128,7 @@ def run(cfg: ModulusConfig) -> None:
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 
     # make nodes to unroll graph on
-    nodes = (ns.make_nodes()
+    nodes = (ns.make_nodes() + slurry_viscosity.make_nodes() 
              + [Node(['a'], ['alpha'], AlphaConverter())] 
              + [time_window_net.make_node(name="time_window_network")])    
     # make importance model
