@@ -3,7 +3,7 @@ defaults :
   - arch:
       - fully_connected
   - scheduler: tf_exponential_lr
-  - optimizer: adahessian
+  - optimizer: adam
   - loss: sum
   - _self_
 
@@ -34,4 +34,5 @@ batch_size:
   outlet: 500
   interface_left: 50 #3400
   interface_right: 500 #3400
+  interface: 1500
   integral_continuity: 100
