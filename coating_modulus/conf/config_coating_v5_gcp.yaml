@@ -4,7 +4,7 @@ defaults :
       - fully_connected
   - scheduler: tf_exponential_lr
   - optimizer: adam
-  - loss: homoscedastic
+  - loss: sum
   - _self_
 
 jit: false
@@ -25,13 +25,14 @@ training:
   grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 1500
-  lowres_interior: 500 #4000
-  highres_interior: 1500
-  highres_interior1: 300
-  no_slip: 500
-  inlet: 100
-  outlet: 500
-  interface_left: 50 #3400
-  interface_right: 500 #3400
-  integral_continuity: 100
+  initial_condition: 3000
+  lowres_interior: 1000 #4000
+  highres_interior: 2000
+  #highres_interior1: 300
+  no_slip: 1000
+  inlet: 1000
+  outlet: 1000
+  #interface_left: 50 #3400
+  #interface_right: 500 #3400
+  interface: 4000
+  integral_continuity: 200
