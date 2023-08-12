@@ -12,7 +12,7 @@ jit: false
 arch:
     fully_connected:
         adaptive_activations: true
-        #activation_fn: "stan"
+        activation_fn: "tanh"
 
 scheduler:
   decay_rate: 0.95
