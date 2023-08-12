@@ -93,9 +93,11 @@ v5_13: sdf + ts 0.0001
 v5_14: norm .0002 1. ts 0.0001 + interior->interface
 v5_15: norm .002 .01 ts 0.0001
 -gcp: v eq 1.0
-v5_17: norm .002 .1
--gcp: v eq 1.0
-v5_18: 
+v5_16: norm .002 .1
+v5_17: norm .0002 1.
+- gcp: veq 1.0
+v5_18: v eq 1.0
+- gcp: free surf
 '''
 
 
@@ -301,9 +303,9 @@ def run(cfg: ModulusConfig) -> None:
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
-            "PDE_a": Symbol("sdf"),
-            "PDE_u": 10*Symbol("sdf"),
-            "PDE_v": 10*Symbol("sdf"),
+            "PDE_a": 1, #Symbol("sdf"),
+            "PDE_u": Symbol("sdf"),
+            "PDE_v": Symbol("sdf"),
         },
         criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
         parameterization=time_range,
@@ -320,9 +322,9 @@ def run(cfg: ModulusConfig) -> None:
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
         lambda_weighting={
             "PDE_m": Symbol("sdf"),
-            "PDE_a": Symbol("sdf"),
-            "PDE_u": 10*Symbol("sdf"),
-            "PDE_v": 10*Symbol("sdf"),
+            "PDE_a": 1,#Symbol("sdf"),
+            "PDE_u": Symbol("sdf"),
+            "PDE_v": Symbol("sdf"),
         },
         criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
         #importance_measure=importance_measure,
@@ -337,7 +339,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 1.0, "PDE_v": 1.0},
         importance_measure=importance_measure,
         parameterization=time_range,
     )
@@ -398,7 +400,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"normal_dot_vel": v_in*Lf},
         batch_size=3,
         integral_batch_size=cfg.batch_size.integral_continuity,
-        lambda_weighting={"normal_dot_vel": 0.1},
+        lambda_weighting={"normal_dot_vel": 1.0},
         parameterization={Symbol("t"): (0, time_window_size), Parameter("x_pos"): (right_rx,(Lf+right_width))}
     )
     ic_domain.add_constraint(integral_continuity, "integral_continuity")
@@ -410,7 +412,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"normal_dot_vel": v_in*Lf},
         batch_size=1,
         integral_batch_size=cfg.batch_size.integral_continuity,
-        lambda_weighting={"normal_dot_vel": 0.1},
+        lambda_weighting={"normal_dot_vel": 1.0},
         criteria=Eq(y,H0),
         parameterization={Symbol("t"): (0, time_window_size)}
     )
