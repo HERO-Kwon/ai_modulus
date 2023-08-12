@@ -1,7 +1,7 @@
 """Equations related to Navier Stokes Equations
 """
 
-from sympy import Symbol, Function, Number, Pow, sqrt
+from sympy import Symbol, Function, Number, Pow, sqrt, Abs
 import numpy as np
 
 from modulus.eq.pde import PDE
@@ -132,14 +132,14 @@ class NavierStokes_VOF(PDE):
         one_Re_y = mu_y/(self.rho_ref*self.U_ref*self.L_ref)
         one_We = self.sigma/(self.rho_ref*self.U_ref**2*self.L_ref)
         one_Fr = self.g*self.L_ref/self.U_ref**2 
-        
+
         # set equations
         self.equations = {}
         self.equations['PDE_m'] = u.diff(x) + v.diff(y)
         self.equations['PDE_a'] = a.diff(t) + u*a.diff(x) + v*a.diff(y)
         self.equations['PDE_u'] = (u.diff(t) + u*u.diff(x) + v*u.diff(y))*rho/self.rho_ref + p.diff(x) - one_We*curvature*a.diff(x) - one_Re*(u.diff(x).diff(x) + u.diff(y).diff(y)) - 2.0*one_Re_x*u.diff(x) - one_Re_y*(u.diff(y) + v.diff(x)) 
         self.equations['PDE_v'] = (v.diff(t) + u*v.diff(x) + v*v.diff(y))*rho/self.rho_ref + p.diff(y) - one_We*curvature*a.diff(y) - one_Re*(v.diff(x).diff(x) + v.diff(y).diff(y)) - rho/self.rho_ref*one_Fr - 2.0*one_Re_y*v.diff(y) - one_Re_x*(u.diff(y) + v.diff(x)) 
-
+        self.equations['penalty_a'] = (1 + a - Abs(a - 1)) / 2 - Abs(a)
 
         '''
         # set equations
