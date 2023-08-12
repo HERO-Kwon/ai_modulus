@@ -100,7 +100,7 @@ v5_18: v eq 1.0
 - gcp: free surf
 v5_19: penalty a
 - gcp: free surf
-v5_21: network size 512 ts 0.0005 tanh free interf
+v5_21: ts 0.0005 tanh free interf
 '''
 
 
@@ -146,7 +146,7 @@ def run(cfg: ModulusConfig) -> None:
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
         output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
-        layer_size=512,
+        layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 
@@ -214,7 +214,7 @@ def run(cfg: ModulusConfig) -> None:
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_slurry, name="ic_slurry")       
-    
+
     # make constraint for matching previous windows initial condition
     ic_highres = PointwiseInteriorConstraint(
         nodes=nodes,
