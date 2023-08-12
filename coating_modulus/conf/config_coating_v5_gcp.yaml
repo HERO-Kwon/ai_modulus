@@ -25,14 +25,14 @@ training:
   grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 3000
-  lowres_interior: 1000 #4000
-  highres_interior: 2000
+  initial_condition: 6000
+  lowres_interior: 2000 #4000
+  highres_interior: 4000
   #highres_interior1: 300
-  no_slip: 1000
-  inlet: 1000
-  outlet: 1000
+  no_slip: 2000
+  inlet: 2000
+  outlet: 2000
   #interface_left: 50 #3400
   #interface_right: 500 #3400
-  interface: 4000
-  integral_continuity: 200
+  interface: 8000
+  integral_continuity: 1000
