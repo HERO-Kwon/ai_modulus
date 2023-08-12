@@ -34,5 +34,5 @@ batch_size:
   outlet: 2000
   #interface_left: 50 #3400
   #interface_right: 500 #3400
-  interface: 20000
+  interface: 15000
   integral_continuity: 1000
