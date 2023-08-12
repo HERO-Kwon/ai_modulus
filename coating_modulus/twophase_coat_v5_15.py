@@ -92,6 +92,7 @@ v5_12: v_5_10g + no int sdf
 v5_13: sdf + ts 0.0001
 v5_14: norm .0002 1. ts 0.0001 + interior->interface
 v5_15: norm .002 .01 ts 0.0001
+-gcp: v eq 1.0
 '''
 
 
