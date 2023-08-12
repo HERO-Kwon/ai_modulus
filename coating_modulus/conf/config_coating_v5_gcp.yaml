@@ -12,7 +12,7 @@ jit: false
 arch:
     fully_connected:
         adaptive_activations: true
-        #activation_fn: "stan"
+        activation_fn: "tanh"
 
 scheduler:
   decay_rate: 0.95
@@ -21,7 +21,7 @@ scheduler:
 training:
   rec_results_freq : 1000
   rec_constraint_freq: 1000
-  max_steps : 3000
+  max_steps : 5000
   grad_agg_freq: 2
 
 batch_size:
