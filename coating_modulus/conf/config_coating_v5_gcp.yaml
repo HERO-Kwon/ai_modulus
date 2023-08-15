@@ -9,10 +9,12 @@ defaults :
 
 jit: false
 
+#optimizer:
+#  lr : 1e-2
 arch:
     fully_connected:
         adaptive_activations: true
-        #activation_fn: "tanh"
+        #activation_fn: "stan"
 
 scheduler:
   decay_rate: 0.95
@@ -25,14 +27,14 @@ training:
   grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 1500
-  lowres_interior: 500 #4000
-  highres_interior: 1000
+  initial_condition: 3000
+  lowres_interior: 1000 #4000
+  highres_interior: 2000
   #highres_interior1: 300
-  no_slip: 500
-  inlet: 500
-  outlet: 500
+  no_slip: 1000
+  inlet: 1000
+  outlet: 1000
   #interface_left: 50 #3400
   #interface_right: 500 #3400
-  interface: 2000
-  integral_continuity: 500
+  interface: 3000
+  integral_continuity: 200
