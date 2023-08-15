@@ -9,8 +9,8 @@ defaults :
 
 jit: false
 
-optimizer:
-  lr : 1e-2
+#optimizer:
+#  lr : 1e-2
 arch:
     fully_connected:
         adaptive_activations: true
@@ -23,8 +23,8 @@ scheduler:
 training:
   rec_results_freq : 1000
   rec_constraint_freq: 1000
-  max_steps : 3000
-  grad_agg_freq: 2
+  max_steps : 5000
+  grad_agg_freq: 3
 
 batch_size:
   initial_condition: 1500
