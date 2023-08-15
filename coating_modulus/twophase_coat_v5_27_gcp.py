@@ -110,8 +110,8 @@ v5_25: silu, initial interf a weight x10 ts .0005, window vis
 - gcp: free surf.
 v5_26: v2_25 + stan, outleta1, no intecon
 - gcp: free surf.
-v5_27: v2_26 + silu
-- gcp: free surf.
+v5_27: v2_26 + silu + setted surf.
+- gcp: uw weight 1, free surf
 '''
 
 
@@ -299,7 +299,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo,
         outvar={"u": Uw ,"v":0},
         batch_size=cfg.batch_size.no_slip,
-        lambda_weighting={"u": 10.0, "v": 10.0},
+        lambda_weighting={"u": 1.0, "v": 11.0},
         criteria=Eq(y,0.0),
         parameterization=time_range,
     )
