@@ -218,7 +218,7 @@ def run(cfg: ModulusConfig) -> None:
 
     ic_slurry = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo#_coating,
+        geometry=geo,#_coating,
         outvar={
             "u": 0,
             "v": 0,
