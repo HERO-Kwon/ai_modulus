@@ -9,6 +9,8 @@ defaults :
 
 jit: false
 
+optimizer:
+  lr : 1e-2
 arch:
     fully_connected:
         adaptive_activations: true

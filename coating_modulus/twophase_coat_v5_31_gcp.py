@@ -111,8 +111,12 @@ v5_25: silu, initial interf a weight x10 ts .0005, window vis
 v5_26: v2_25 + stan, outleta1, no intecon
 - gcp: free surf.
 v5_27: v2_26 + silu + setted surf.
-- gcp: uw weight 1, free surf
-v5_28: v2_26 + silu + setted surf. +  lr le-5
+- gcp: uw weight 1, free surf(x)
+v5_28:  + uw weight 1, density intecon
+v5_29:  lr e-5
+v5_30:  lr e-4
+v5_31:  lr e-2
+ - gcp: free surf
 '''
 
 
@@ -132,7 +136,8 @@ class NormalDotVec(PDE):
         self.equations = {}
         self.equations["normal_dot_vel"] = 0
         for v, n in zip(vec, normal):
-            self.equations["normal_dot_vel"] += Abs(1-a)*Symbol(v) * n
+            rho = (rho2 + (rho1 - rho2) * a) / rho_ref
+            self.equations["normal_dot_vel"] += rho*Symbol(v) * n
 
 
 @modulus.main(config_path="conf", config_name="config_coating_v5")
@@ -197,7 +202,7 @@ def run(cfg: ModulusConfig) -> None:
     # make initial condition
     ic_air = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_uncoating,
+        geometry=geo, #,_uncoating,
         outvar={
             "u": 0,
             "v": 0,
@@ -206,14 +211,14 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=Or((x < 0.0), (x > Lf),(y<H0)),
+        criteria=Or((x < 0.0), (x > Lf)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
 
     ic_slurry = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_coating,
+        geometry=geo#_coating,
         outvar={
             "u": 0,
             "v": 0,
@@ -222,7 +227,7 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=And((x > 0.0), (x < Lf),(y>H0)),
+        criteria=And((x > 0.0), (x < Lf)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_slurry, name="ic_slurry")       
@@ -300,7 +305,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo,
         outvar={"u": Uw ,"v":0},
         batch_size=cfg.batch_size.no_slip,
-        lambda_weighting={"u": 1.0, "v": 11.0},
+        lambda_weighting={"u": 10.0, "v": 10.0},
         criteria=Eq(y,0.0),
         parameterization=time_range,
     )
@@ -411,10 +416,11 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_constraint(interface_right, name="interface_right")
     
         # integral continuity
+        #rho = rho2 + (rho1 - rho2) * a        
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
-        outvar={"normal_dot_vel": v_in*Lf},
+        outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
         batch_size=3,
         integral_batch_size=cfg.batch_size.integral_continuity,
         lambda_weighting={"normal_dot_vel": 1.0},
@@ -426,7 +432,7 @@ def run(cfg: ModulusConfig) -> None:
     integral_continuity_in = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=mid_rec,
-        outvar={"normal_dot_vel": v_in*Lf},
+        outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
         batch_size=1,
         integral_batch_size=cfg.batch_size.integral_continuity,
         lambda_weighting={"normal_dot_vel": 1.0},

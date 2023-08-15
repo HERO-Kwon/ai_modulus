@@ -110,7 +110,8 @@ v5_25: silu, initial interf a weight x10 ts .0005, window vis
 - gcp: free surf.
 v5_26: v2_25 + stan, outleta1, no intecon
 - gcp: free surf.
-v5_27: v2_26 + silu + setted surf.
+v5_27: v2_26 + silu + setted surf. + uw weight 1
+- gcp: uw weight 1, free surf
 '''
 
 
