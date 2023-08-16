@@ -133,6 +133,7 @@ v6: bubble conf + 5_36
 v6_2: timestep 20000 scale 0.0002 10
 -gcp: vin weight 100 pdev 100
 v6_3: gcp+timestep 5k
+-gcp: free surf
 '''
 
 
@@ -297,7 +298,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo,
         outvar={"u": 0, "v": -1*v_in, "a": 0},
         batch_size=cfg.batch_size.inlet,
-        lambda_weighting={"u": 1.0, "v": 1.0, "a":1.0},
+        lambda_weighting={"u": 1.0, "v": 100.0, "a":1.0},
         criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
     )
@@ -342,7 +343,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_m": Symbol("sdf"),
             "PDE_a": 1, #Symbol("sdf"),
             "PDE_u": 10*Symbol("sdf"),
-            "PDE_v": 10*Symbol("sdf"),
+            "PDE_v": 100*Symbol("sdf"),
             "penalty_a": 1,
         },
         criteria=Or((x<-1*Lu), And(Or(And((x>0),(x<Lf)),(x>(Lf+right_rx))),(y>H0))),
@@ -362,7 +363,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_m": Symbol("sdf"),
             "PDE_a": 1,#Symbol("sdf"),
             "PDE_u": 10*Symbol("sdf"),
-            "PDE_v": 10*Symbol("sdf"),
+            "PDE_v": 100*Symbol("sdf"),
             "penalty_a": 1,
         },
         #criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
@@ -379,7 +380,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0, "penalty_a":0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.interface,
-        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0, "penalty_a": 1.0},
+        lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 100.0, "penalty_a": 1.0},
         importance_measure=importance_measure,
         parameterization=time_range,
     )

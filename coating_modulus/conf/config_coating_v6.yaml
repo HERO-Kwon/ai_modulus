@@ -20,7 +20,7 @@ scheduler:
 training:
   rec_results_freq : 1000
   rec_constraint_freq: 1000
-  max_steps : 20000
+  max_steps : 5000
   #grad_agg_freq: 2
 
 batch_size:
