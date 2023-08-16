@@ -125,7 +125,6 @@ v5_34: 0.0001 sec
 - gcp: free surf
 v5_35: scale l 0.0002 v 10 no intecon weight u v 10 a 1
 - gcp: scale l 0.002 v 10
-v5_36: scale l 0.002 v 10 + intecon
 '''
 
 
@@ -146,11 +145,11 @@ class NormalDotVec(PDE):
         self.equations["normal_dot_vel"] = 0
         for v, n in zip(vec, normal):
             rho = (rho2 + (rho1 - rho2) * a) / rho_ref
-            self.equations["normal_dot_vel"] += rho*Symbol(v) * n
-            #self.equations["normal_dot_vel"] += Symbol(v) * n
+            #self.equations["normal_dot_vel"] += rho*Symbol(v) * n
+            self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v5")
+@modulus.main(config_path="conf", config_name="config_coating_v5_gcp")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
@@ -426,8 +425,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_constraint(interface_right, name="interface_right")
     
         # integral continuity
-        #rho = rho2 + (rho1 - rho2) * a   
-    '''     
+        #rho = rho2 + (rho1 - rho2) * a        
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -439,11 +437,12 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity, "integral_continuity")
     window_domain.add_constraint(integral_continuity, "integral_continuity")
-    
+    '''
     integral_continuity_in = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=mid_rec,
-        outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
+        #outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
+        outvar={"normal_dot_vel": v_in*Lf},
         batch_size=1,
         integral_batch_size=cfg.batch_size.integral_continuity,
         lambda_weighting={"normal_dot_vel": 1.0},
