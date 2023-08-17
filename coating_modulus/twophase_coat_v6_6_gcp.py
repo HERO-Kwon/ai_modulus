@@ -226,7 +226,7 @@ def run(cfg: ModulusConfig) -> None:
     # make initial condition
     ic_air = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_uncoating,
+        geometry=geo,#_uncoating,
         outvar={
             "u": 0,
             "v": 0,
@@ -235,14 +235,14 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=Or((x < 0.0), (x > Lf),(y<H0)),
+        criteria=Or((x < 0.0), (x > Lf),(y<H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
 
     ic_slurry = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo_coating,
+        geometry=geo,#_coating,
         outvar={
             "u": 0,
             "v": 0,
@@ -251,7 +251,7 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        #criteria=And((x > 0.0), (x < Lf),(y>H0)),
+        criteria=And((x > 0.0), (x < Lf),(y>H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_slurry, name="ic_slurry")       
@@ -466,7 +466,7 @@ def run(cfg: ModulusConfig) -> None:
     
         # integral continuity
         #rho = rho2 + (rho1 - rho2) * a   
-    '''     
+    
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -492,7 +492,7 @@ def run(cfg: ModulusConfig) -> None:
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     
-
+    '''     
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):

@@ -380,17 +380,16 @@ class Curl(PDE):
 
     name = "Curl"
 
-    def __init__(self, vector, curl_name=["u", "v", "w"]):
+    def __init__(self, vector, curl_name=["u", "v"]):
         # coordinates
-        x, y, z = Symbol("x"), Symbol("y"), Symbol("z")
+        x, y = Symbol("x"), Symbol("y")
 
         # make input variables
-        input_variables = {"x": x, "y": y, "z": z}
+        input_variables = {"x": x, "y": y}
 
         # vector
         v_0 = vector[0]
         v_1 = vector[1]
-        v_2 = vector[2]
 
         # make funtions
         if type(v_0) is str:
@@ -401,20 +400,12 @@ class Curl(PDE):
             v_1 = Function(v_1)(*input_variables)
         elif type(v_1) in [float, int]:
             v_1 = Number(v_1)
-        if type(v_2) is str:
-            v_2 = Function(v_2)(*input_variables)
-        elif type(v_2) in [float, int]:
-            v_2 = Number(v_2)
 
         # curl
-        curl_0 = v_2.diff(y) - v_1.diff(z)
-        curl_1 = v_0.diff(z) - v_2.diff(x)
         curl_2 = v_1.diff(x) - v_0.diff(y)
 
         # set equations
         self.equations = {}
-        self.equations[curl_name[0]] = curl_0
-        self.equations[curl_name[1]] = curl_1
         self.equations[curl_name[2]] = curl_2
 
 
