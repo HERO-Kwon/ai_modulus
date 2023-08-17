@@ -136,7 +136,7 @@ v6_3: gcp+timestep 5k
 -gcp: free surf
 v6_4: output p weight 100,
 -gcp: free surf
-v6_5: default v weight, ts 0.00001
+v6_5: default v weight, ts 0.00001, step 1000
 -gcp: free surf
 '''
 

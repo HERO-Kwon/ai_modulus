@@ -32,7 +32,7 @@ from modulus.graph import Graph
 from modulus.eq.pde import PDE
 
 from a_params_v4 import *
-from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF
+from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF, Curl
 from a_slurry_viscosity_eq_v4 import SlurryViscosity
 from a_HC_geo_v4 import *
 
@@ -136,8 +136,9 @@ v6_3: gcp+timestep 5k
 -gcp: free surf
 v6_4: output p weight 100,
 -gcp: free surf
-v6_5: default v weight, ts 0.00001, , step 1000
+v6_5: default v weight, ts 0.00001
 -gcp: free surf
+v6_6: exact cont.
 '''
 
 
@@ -180,6 +181,16 @@ def run(cfg: ModulusConfig) -> None:
 
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")
+
+    # determine inputs outputs of the network
+    input_keys = [Key("x"), Key("y")]
+    if cfg.custom.exact_continuity:
+        c = Curl(("ca", "cb"), ("u", "v"))
+        equation_nodes += c.make_nodes()
+        output_keys = [Key("ca"), Key("cb"), Key("p"), Key("a")]
+    else:
+        output_keys = [Key("u"), Key("v"), Key("p"), Key("a")]
+
 
     # make network for current step and previous step
     flow_net = FullyConnectedArch(
@@ -224,7 +235,7 @@ def run(cfg: ModulusConfig) -> None:
     # make initial condition
     ic_air = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo,#_uncoating,
+        geometry=geo_uncoating,
         outvar={
             "u": 0,
             "v": 0,
@@ -233,14 +244,14 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        criteria=Or((x < 0.0), (x > Lf),(y<H0)),
+        #criteria=Or((x < 0.0), (x > Lf),(y<H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_air, name="ic_air")
 
     ic_slurry = PointwiseInteriorConstraint(
         nodes=nodes,
-        geometry=geo,#_coating,
+        geometry=geo_coating,
         outvar={
             "u": 0,
             "v": 0,
@@ -249,7 +260,7 @@ def run(cfg: ModulusConfig) -> None:
         },
         batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": 100, "v": 100, "p": 100, "a": 100},
-        criteria=And((x > 0.0), (x < Lf),(y>H0)),
+        #criteria=And((x > 0.0), (x < Lf),(y>H0)),
         parameterization={t_symbol: 0},
     )
     ic_domain.add_constraint(ic_slurry, name="ic_slurry")       
@@ -440,7 +451,7 @@ def run(cfg: ModulusConfig) -> None:
     
         # integral continuity
         #rho = rho2 + (rho1 - rho2) * a   
-    
+    '''     
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -465,7 +476,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
-    '''     
+    
 
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
