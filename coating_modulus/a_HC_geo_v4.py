@@ -124,7 +124,7 @@ geo = geo_coating + geo_uncoating
 x_pos = Parameter("x_pos")
 integral_line = Line(
     (x_pos, 0),
-    (x_pos, hw),
+    (x_pos, H0),
     1,
     parameterization=Parameterization({x_pos: (right_rx,(Lf+right_width))}),
 )

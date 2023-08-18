@@ -140,7 +140,10 @@ v6_5: default v weight, ts 0.00001
 -gcp: free surf
 v6_6: pressure penalty. ts 0.0001
 -gcp: free surf
-v6_7: ts 0.001, max step 3000
+v6_7: ts 0.001, max step 3000, v norm 10 
+-1 : ts 0.0005
+-2 : ts 0.0002
+v6_8: ts 0.0001
 '''
 
 
@@ -169,7 +172,7 @@ class NormalDotVec(PDE):
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.001 / t_ref
+    time_window_size = 0.0001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -187,7 +190,7 @@ def run(cfg: ModulusConfig) -> None:
     # make network for current step and previous step
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
-        output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
+        output_keys=[Key("u"), Key("v"), Key("p"),Key("a")],
         layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)

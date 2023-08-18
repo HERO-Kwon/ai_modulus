@@ -140,7 +140,13 @@ v6_5: default v weight, ts 0.00001
 -gcp: free surf
 v6_6: pressure penalty. ts 0.0001
 -gcp: free surf
-v6_7: ts 0.001, max step 3000
+v6_7: ts 0.001, max step 3000, v norm 10 
+-1 : ts 0.0005
+-2 : ts 0.0002
+v6_8: ts 0.0001
+v6_9: outlet change
+
+v7_1: bubble setting doe, inlet pressure penalty, L_ref 0.002 network size 256
 '''
 
 
@@ -160,16 +166,16 @@ class NormalDotVec(PDE):
         self.equations = {}
         self.equations["normal_dot_vel"] = 0
         for v, n in zip(vec, normal):
-            rho = (rho2 + (rho1 - rho2) * a) / rho_ref
-            self.equations["normal_dot_vel"] += rho*Symbol(v) * n
+            #rho = (rho2 + (rho1 - rho2) * a) / rho_ref
+            self.equations["normal_dot_vel"] += Abs(1-a)*Symbol(v) * n
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v6")
+@modulus.main(config_path="conf", config_name="config_coating_v7")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.001 / t_ref
+    time_window_size = 0.0001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -187,8 +193,8 @@ def run(cfg: ModulusConfig) -> None:
     # make network for current step and previous step
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
-        output_keys=[Key("u"), Key("v"), Key("p"), Key("a")],
-        layer_size=256,
+        output_keys=[Key("u"), Key("v"), Key("p"),Key("a")],
+        layer_size=512,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 
@@ -315,7 +321,7 @@ def run(cfg: ModulusConfig) -> None:
     outlet = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"p": 0, "a": 1},
+        outvar={"p": 0},
         batch_size=cfg.batch_size.outlet,
         criteria=And((y>0.0), Or((-1*left_tri_height-1*Lu>x),(x>Lf+Ld+right_tri_height))),
         parameterization=time_range,
@@ -471,7 +477,7 @@ def run(cfg: ModulusConfig) -> None:
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
-        outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
+        outvar={"normal_dot_vel": v_in*Lf},
         batch_size=3,
         integral_batch_size=cfg.batch_size.integral_continuity,
         lambda_weighting={"normal_dot_vel": 1.0},
@@ -483,7 +489,7 @@ def run(cfg: ModulusConfig) -> None:
     integral_continuity_in = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=mid_rec,
-        outvar={"normal_dot_vel": (rho2/rho_ref)*v_in*Lf},
+        outvar={"normal_dot_vel": v_in*Lf},
         batch_size=1,
         integral_batch_size=cfg.batch_size.integral_continuity,
         lambda_weighting={"normal_dot_vel": 1.0},

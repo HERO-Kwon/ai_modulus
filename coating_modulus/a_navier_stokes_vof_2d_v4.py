@@ -136,6 +136,7 @@ class NavierStokes_VOF(PDE):
         # p pennalty 10~20
         delta1 = (p - 10) / 2 + abs((p - 10) / 2)
         delta2 = (20 - p) / 2 + abs((20 - p) / 2)
+
         # set equations
         self.equations = {}
         self.equations['PDE_m'] = u.diff(x) + v.diff(y)
@@ -143,7 +144,7 @@ class NavierStokes_VOF(PDE):
         self.equations['PDE_u'] = (u.diff(t) + u*u.diff(x) + v*u.diff(y))*rho/self.rho_ref + p.diff(x) - one_We*curvature*a.diff(x) - one_Re*(u.diff(x).diff(x) + u.diff(y).diff(y)) - 2.0*one_Re_x*u.diff(x) - one_Re_y*(u.diff(y) + v.diff(x)) 
         self.equations['PDE_v'] = (v.diff(t) + u*v.diff(x) + v*v.diff(y))*rho/self.rho_ref + p.diff(y) - one_We*curvature*a.diff(y) - one_Re*(v.diff(x).diff(x) + v.diff(y).diff(y)) - rho/self.rho_ref*one_Fr - 2.0*one_Re_y*v.diff(y) - one_Re_x*(u.diff(y) + v.diff(x)) 
         self.equations['penalty_a'] = (1 + a - Abs(a - 1)) / 2 - Abs(a)
-        self.equations['penalty_p'] = 10-(delta1+delta2)
+        self.equations['penalty_p'] = (1 - p) / 2 + abs((1 - p) / 2) #10-(delta1+delta2)
 
         '''
         # set equations

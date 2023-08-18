@@ -140,7 +140,8 @@ v6_5: default v weight, ts 0.00001
 -gcp: free surf
 v6_6: pressure penalty. ts 0.0001
 -gcp: free surf
-v6_7: ts 0.001, max step 3000
+v6_7: ts 0.001, max step 3000, v norm 10 
+-1 : ts 0.005
 '''
 
 
@@ -169,7 +170,7 @@ class NormalDotVec(PDE):
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.001 / t_ref
+    time_window_size = 0.0005 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200

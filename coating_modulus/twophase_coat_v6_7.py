@@ -140,7 +140,7 @@ v6_5: default v weight, ts 0.00001
 -gcp: free surf
 v6_6: pressure penalty. ts 0.0001
 -gcp: free surf
-v6_7: ts 0.001, max step 3000
+v6_7: ts 0.001, max step 3000, v norm 10 
 '''
 
 
