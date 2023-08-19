@@ -148,7 +148,7 @@ v6_9: outlet change
 
 v7_1: bubble setting doe, inlet pressure penalty(x), L_ref 0.002 network size 512
 -gcp: free surf ts 0.001
-v7_2: ts 0.001 , inlet pressure penalty
+v7_2: ts 0.0001 , inlet pressure penalty
 '''
 
 
@@ -177,7 +177,7 @@ class NormalDotVec(PDE):
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.001 / t_ref
+    time_window_size = 0.0001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -196,7 +196,7 @@ def run(cfg: ModulusConfig) -> None:
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
         output_keys=[Key("u"), Key("v"), Key("p"),Key("a")],
-        layer_size=512,
+        layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 

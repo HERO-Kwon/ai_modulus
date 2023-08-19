@@ -196,7 +196,7 @@ def run(cfg: ModulusConfig) -> None:
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
         output_keys=[Key("u"), Key("v"), Key("p"),Key("a")],
-        layer_size=512,
+        layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
 
