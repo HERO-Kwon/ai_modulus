@@ -19,12 +19,14 @@ scheduler:
   decay_rate: 0.25
   decay_steps: 500
 
+#initialization_network_dir: "../twophase_coat_v7_2_1_tr"
 #network_dir: "tl_0"
-#initialization_network_dir: "../outputs/a_transfer/twophase_coat_v7_1_gcp/"
+#initialization_network_dir: "../twophase_coat_v7_2_1/window_0007"
+#initialization_network_dir : "../limerock_flow/baseline"  # for TL runs
 
 training:
-  rec_results_freq : 500
-  rec_constraint_freq: 500s
+  rec_results_freq : 1000
+  rec_constraint_freq: 1000
   max_steps : 2000
   #grad_agg_freq: 2
 
