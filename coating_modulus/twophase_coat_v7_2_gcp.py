@@ -148,6 +148,7 @@ v6_9: outlet change
 
 v7_1: bubble setting doe, inlet pressure penalty, L_ref 0.002 network size 512
 -gcp: free surf ts 0.001
+v7_2: L_ref 0.0002
 '''
 
 
@@ -176,7 +177,7 @@ class NormalDotVec(PDE):
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.1 / t_ref
+    time_window_size = 0.001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
@@ -391,7 +392,7 @@ def run(cfg: ModulusConfig) -> None:
     inlet_interior = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0, "penalty_a":0},# "penalty_p":0},
+        outvar={"PDE_m": 0, "PDE_a": 0, "PDE_u": 0, "PDE_v": 0, "penalty_a":0, "penalty_p":0},
         #bounds=box_bounds,
         batch_size=cfg.batch_size.lowres_interior,
         #lambda_weighting={"PDE_m": 1.0, "PDE_a": 1.0,   "PDE_u": 10.0, "PDE_v": 10.0},
@@ -401,7 +402,7 @@ def run(cfg: ModulusConfig) -> None:
             "PDE_u": 10*Symbol("sdf"),
             "PDE_v": 10*Symbol("sdf"),
             "penalty_a": 1,
-            #s"penalty_p": 1,
+            "penalty_p": 1,
         },
         #criteria=Or(And((x>-1*Lu),(x<(Lf+right_width)),(y<H0)),And((x>Lf+Ld),(x<(Lf+right_rx)),(y>H0))),
         criteria=And((x>0),(x<(Lf)),(y>H0)),
