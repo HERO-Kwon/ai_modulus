@@ -19,7 +19,7 @@ scheduler:
   decay_rate: 0.25
   decay_steps: 500
 
-initialization_network_dir: "../outputs/a_transfer/twophase_coat_v7_1_gcp/"
+initialization_network_dir: "./outputs/a_transfer/twophase_coat_v7_1_gcp/"
 
 training:
   rec_results_freq : 5000
