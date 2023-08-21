@@ -33,4 +33,6 @@ batch_size:
   inlet: 300
   outlet: 300
   interface: 340 #3400
+  interface_left: 100
+  interface_right: 340
   integral_continuity: 300
