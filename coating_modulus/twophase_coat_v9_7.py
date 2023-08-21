@@ -251,7 +251,7 @@ def run(cfg: ModulusConfig) -> None:
         importance = (
             outvar["a__x"] ** 2
             + outvar["a__y"] ** 2
-        ) ** 0.5 * 100
+        ) ** 0.5 * 1000
         return importance.cpu().detach().numpy()
     # make initial condition domain
     ic_domain = Domain("initial_conditions")
