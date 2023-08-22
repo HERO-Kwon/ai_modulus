@@ -560,7 +560,7 @@ def run(cfg: ModulusConfig) -> None:
     
     vtk_obj = VTKUniformGrid(
         bounds=[(-1*left_width, (Lf+right_width)), (0.0, right_height)],
-        npoints=[50, 50],
+        npoints=[128, 128],
         export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
     )
     grid_inference = PointVTKInferencer(
@@ -571,12 +571,13 @@ def run(cfg: ModulusConfig) -> None:
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,
-        invar={"t": np.full([50 ** 2, 1], 0)},
+        invar={"t": np.full([128 ** 2, 1], 0)},
         batch_size=100000,
     )
+    '''
     vtk_obj1 = VTKUniformGrid(
         bounds=[(-1*left_width/5, (Lf+right_width/5)), (0.0, right_height/5)],
-        npoints=[50, 50],
+        npoints=[128, 128],
         export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
     )
     grid_inference1 = PointVTKInferencer(
@@ -587,7 +588,7 @@ def run(cfg: ModulusConfig) -> None:
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,
-        invar={"t": np.full([50 ** 2, 1], 0)},
+        invar={"t": np.full([128 ** 2, 1], 0)},
         batch_size=100000,
     )
     ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(t_symbol).zfill(4))
@@ -598,6 +599,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_inferencer(
         grid_inference1, name="window_" + str(t_symbol).zfill(4)
     )
+    '''
     # make solver
     slv = SequentialSolver(
         cfg,
