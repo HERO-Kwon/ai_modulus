@@ -207,7 +207,7 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v7_1")
+@modulus.main(config_path="conf", config_name="config_coating_v7")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
