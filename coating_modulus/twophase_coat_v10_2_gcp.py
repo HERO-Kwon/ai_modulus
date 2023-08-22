@@ -182,7 +182,7 @@ v8_4: l_ref 0.002, p 0.01
 
 v10_1: impmes a 0.5, inlet vel x1000, inlet intercon
 v10_2: initial pressure, prev diff p
-- gcp: free surf, minimal pnt
+- gcp: free surf, ts 0.001
 '''
 
 
@@ -207,11 +207,11 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v7_1_short")
+@modulus.main(config_path="conf", config_name="config_coating_v7_1")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
-    time_window_size = 0.0001 / t_ref
+    time_window_size = 0.001 / t_ref
     t_symbol = Symbol("t")
     time_range = {t_symbol: (0, time_window_size)}
     nr_time_windows = 200
