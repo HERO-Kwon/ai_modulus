@@ -560,7 +560,7 @@ def run(cfg: ModulusConfig) -> None:
     
     vtk_obj = VTKUniformGrid(
         bounds=[(-1*left_width, (Lf+right_width)), (0.0, right_height)],
-        npoints=[128, 128],
+        npoints=[50, 50],
         export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
     )
     grid_inference = PointVTKInferencer(
@@ -576,7 +576,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     vtk_obj1 = VTKUniformGrid(
         bounds=[(-1*left_width/5, (Lf+right_width/5)), (0.0, right_height/5)],
-        npoints=[128, 128],
+        npoints=[50, 50],
         export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
     )
     grid_inference1 = PointVTKInferencer(
