@@ -16,7 +16,7 @@ optimizer:
   lr: 1e-4
   
 scheduler:
-  decay_rate: 0.5
+  decay_rate: 0.25
   decay_steps: 5000
 
 training:
@@ -33,6 +33,4 @@ batch_size:
   inlet: 100
   outlet: 100
   interface: 340 #3400
-  interface_left: 100
-  interface_right: 340
   integral_continuity: 10

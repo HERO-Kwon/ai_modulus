@@ -16,13 +16,13 @@ optimizer:
   lr: 1e-4
   
 scheduler:
-  decay_rate: 0.5
-  decay_steps: 5000
+  decay_rate: 0.25
+  decay_steps: 1000
 
 training:
-  rec_results_freq : 5000
-  rec_constraint_freq: 5000
-  max_steps : 25000
+  rec_results_freq : 1000
+  rec_constraint_freq: 1000
+  max_steps : 3000
   #grad_agg_freq: 2
 
 batch_size:
@@ -33,6 +33,4 @@ batch_size:
   inlet: 100
   outlet: 100
   interface: 340 #3400
-  interface_left: 100
-  interface_right: 340
   integral_continuity: 10
