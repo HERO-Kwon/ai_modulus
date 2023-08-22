@@ -571,7 +571,7 @@ def run(cfg: ModulusConfig) -> None:
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,
-        invar={"t": np.full([128 ** 2, 1], 0)},
+        invar={"t": np.full([50 ** 2, 1], 0)},
         batch_size=100000,
     )
     vtk_obj1 = VTKUniformGrid(
@@ -587,7 +587,7 @@ def run(cfg: ModulusConfig) -> None:
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,
-        invar={"t": np.full([128 ** 2, 1], 0)},
+        invar={"t": np.full([50 ** 2, 1], 0)},
         batch_size=100000,
     )
     ic_domain.add_inferencer(grid_inference, name="time_slice_" + str(t_symbol).zfill(4))
