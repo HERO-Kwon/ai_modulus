@@ -574,7 +574,7 @@ def run(cfg: ModulusConfig) -> None:
         invar={"t": np.full([128 ** 2, 1], 0)},
         batch_size=100000,
     )
-    '''
+    
     vtk_obj1 = VTKUniformGrid(
         bounds=[(-1*left_width/5, (Lf+right_width/5)), (0.0, right_height/5)],
         npoints=[128, 128],
@@ -599,7 +599,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_inferencer(
         grid_inference1, name="window_" + str(t_symbol).zfill(4)
     )
-    '''
+    
     # make solver
     slv = SequentialSolver(
         cfg,
