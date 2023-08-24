@@ -198,6 +198,8 @@ v11_3: 10_4 setting conf v11
 -gcp: conf v10_1
 v11_4: reduced conf point interface focus, 
 -gcp: Lref 0.002
+v11_5: 10_1 conf interface focus
+-gcp: Lref 0.002
 '''
 
 
@@ -222,7 +224,7 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v11_1")
+@modulus.main(config_path="conf", config_name="config_coating_v11_2")
 def run(cfg: ModulusConfig) -> None:
 
     # make navier stokes equations

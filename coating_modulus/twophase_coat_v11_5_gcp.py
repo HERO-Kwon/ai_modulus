@@ -34,10 +34,10 @@ from modulus.node import Node
 from modulus.graph import Graph
 from modulus.eq.pde import PDE
 
-from a_params_v4 import *
-from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF, Curl
-from a_slurry_viscosity_eq_v4 import SlurryViscosity
-from a_HC_geo_v5 import *
+from a_params_v4_gcp import *
+from a_navier_stokes_vof_2d_v4_gcp import NavierStokes_VOF, Curl
+from a_slurry_viscosity_eq_v4_gcp import SlurryViscosity
+from a_HC_geo_v5_gcp import *
 
 '''
 v0: 개발중
@@ -222,7 +222,7 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v11_1")
+@modulus.main(config_path="conf", config_name="config_coating_v11_2")
 def run(cfg: ModulusConfig) -> None:
 
     # make navier stokes equations
@@ -263,7 +263,7 @@ def run(cfg: ModulusConfig) -> None:
 
     def importance_measure(invar):
         outvar = importance_model_graph(
-            Constraint._set_device(invar, device=device)#, requires_grad=True)
+            Constraint._set_device(invar, device=device, requires_grad=True)
         )
         importance = 10* 2*(0.5-torch.abs(0.5-outvar["a"]))
         #importance = (
