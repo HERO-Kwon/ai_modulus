@@ -347,7 +347,7 @@ def run(cfg: ModulusConfig) -> None:
         nodes=nodes,
         geometry=geo,
         outvar={"u_prev_step_diff": 0, "v_prev_step_diff": 0,"p_prev_step_diff": 0, "a_prev_step_diff": 0},
-        batch_size=cfg.batch_size.interfaces,
+        batch_size=cfg.batch_size.interface,
         lambda_weighting={
             "u_prev_step_diff": 100,
             "v_prev_step_diff": 100,
