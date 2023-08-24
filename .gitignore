@@ -7,6 +7,7 @@ HC*.*
 -checkpoint.yaml
 ## 폴더 무시
 coating_modulus/outputs
+coating_modulus/outputs_old
 twophase_modulus/outputs
 examples-release_22.09
 examples

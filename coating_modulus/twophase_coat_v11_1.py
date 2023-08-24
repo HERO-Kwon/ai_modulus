@@ -23,6 +23,9 @@ from modulus.domain.constraint import (
 )
 from modulus.domain.constraint import Constraint
 from modulus.domain.inferencer import PointVTKInferencer
+
+from modulus.domain.monitor import PointwiseMonitor
+from modulus.domain.validator import PointwiseValidator
 from modulus.utils.io import (
     VTKUniformGrid,
 )
@@ -188,6 +191,9 @@ v10_3: lref 0.002, ts0.0005, initial vin
 v10_4: lref 0.0002, ts 0.0001, init vin, p prev diff, interior sdf, lr 1e-3, ini pnt 1000
 - home: lr lre-4, diff uvpa, inlet p removed
 - gcp: default
+
+v11_1: conf_v3
+
 '''
 
 
@@ -212,7 +218,7 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v10_1")
+@modulus.main(config_path="conf", config_name="config_coating_v3")
 def run(cfg: ModulusConfig) -> None:
 
     # time window parameters
@@ -619,6 +625,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_inferencer(
         grid_inference1, name="window_" + str(t_symbol).zfill(4)
     )
+
     # make solver
     slv = SequentialSolver(
         cfg,
