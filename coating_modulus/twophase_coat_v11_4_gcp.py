@@ -319,7 +319,7 @@ def run(cfg: ModulusConfig) -> None:
             "p": 4.0162*y*y-4.4586*y+8.6604,
             "a": 0,
         },
-        batch_size=cfg.batch_size.initial_condition/5,
+        batch_size=cfg.batch_size.initial_condition,
         lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": Symbol("sdf"), "a": 100},
         criteria=And((x > 0.0), (x < Lf), (y<H0)),
         parameterization={t_symbol: 0},
