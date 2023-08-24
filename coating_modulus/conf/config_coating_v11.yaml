@@ -14,24 +14,24 @@ arch:
         adaptive_activations: true
 
 scheduler:
-  decay_rate: 0.95
-  decay_steps: 3000
+  decay_rate: 0.25
+  decay_steps: 5000
 
 training:
-  rec_results_freq : 1000
-  rec_constraint_freq: 1000
+  rec_results_freq : 5000
+  rec_constraint_freq: 5000
   max_steps : 25000
   grad_agg_freq: 2
 
 batch_size:
   initial_condition: 1000
-  lowres_interior: 500 #4000
-  highres_interior: 1500
-  highres_interior1: 300
+  lowres_interior: 1000 #4000
+  highres_interior: 1000
   no_slip: 500
   inlet: 100
-  outlet: 500
+  outlet: 100
   interface_left: 50 #3400
   interface_right: 100 #3400
   interface: 1000
   integral_continuity: 100
+

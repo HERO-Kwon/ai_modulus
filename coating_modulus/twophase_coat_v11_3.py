@@ -37,7 +37,7 @@ from modulus.eq.pde import PDE
 from a_params_v4 import *
 from a_navier_stokes_vof_2d_v4 import NavierStokes_VOF, Curl
 from a_slurry_viscosity_eq_v4 import SlurryViscosity
-from a_HC_geo_v4 import *
+from a_HC_geo_v5 import *
 
 '''
 v0: 개발중
@@ -191,9 +191,7 @@ v10_3: lref 0.002, ts0.0005, initial vin
 v10_4: lref 0.0002, ts 0.0001, init vin, p prev diff, interior sdf, lr 1e-3, ini pnt 1000
 - home: lr lre-4, diff uvpa, inlet p removed
 - gcp: default
-
-v11_1: conf_v3
-
+v113: 10_4 setting
 '''
 
 
@@ -218,14 +216,8 @@ class NormalDotVec(PDE):
             #self.equations["normal_dot_vel"] += Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v3")
+@modulus.main(config_path="conf", config_name="config_coating_v11")
 def run(cfg: ModulusConfig) -> None:
-
-    # time window parameters
-    time_window_size = 0.0001 / t_ref
-    t_symbol = Symbol("t")
-    time_range = {t_symbol: (0, time_window_size)}
-    nr_time_windows = 200
 
     # make navier stokes equations
     slurry_viscosity = SlurryViscosity(dim=2, time=True)
@@ -290,7 +282,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 1,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": 100, "a": 100},
+        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": Symbol("sdf"), "a": 100},
         #criteria=Or((x < 0.0), (x > Lf),(y<H0)),
         parameterization={t_symbol: 0},
     )
@@ -306,7 +298,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 0,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": 100, "a": 100},
+        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": Symbol("sdf"), "a": 100},
         criteria=And((x > 0.0), (x < Lf), (y>H0)),
         parameterization={t_symbol: 0},
     )
@@ -322,7 +314,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 0,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": 100, "a": 100},
+        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": Symbol("sdf"), "a": 100},
         criteria=And((x > 0.0), (x < Lf), (y<H0)),
         parameterization={t_symbol: 0},
     )
@@ -338,7 +330,7 @@ def run(cfg: ModulusConfig) -> None:
             "a": 0,
         },
         batch_size=cfg.batch_size.initial_condition,
-        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": 100, "a": 100},
+        lambda_weighting={"u": Symbol("sdf"), "v": Symbol("sdf"), "p": Symbol("sdf"), "a": 100},
         criteria=(x>Lf),
         parameterization={t_symbol: 0},
     )
@@ -578,7 +570,27 @@ def run(cfg: ModulusConfig) -> None:
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     
-
+    # monitors for force, residuals and temperature
+    global_monitor = PointwiseMonitor(
+        geo.sample_interior(100),
+        output_names=["PDE_m","PDE_u","PDE_v","alpha"],
+        metrics={
+            "slurry_volume": lambda var: torch.sum(
+                var["area"] * torch.abs(1-var["alpha"])
+            ),
+            "mass_imbalance": lambda var: torch.sum(
+                var["area"] * torch.abs(var["PDE_m"])
+            ),
+            "momentum_imbalance": lambda var: torch.sum(
+                var["area"]
+                * (torch.abs(var["PDE_u"]) + torch.abs(var["PDE_v"]))
+            ),
+        },
+        nodes=nodes,
+        requires_grad=True,
+    )
+    ic_domain.add_monitor(global_monitor)
+    window_domain.add_monitor(global_monitor)
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):
@@ -625,7 +637,6 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_inferencer(
         grid_inference1, name="window_" + str(t_symbol).zfill(4)
     )
-
     # make solver
     slv = SequentialSolver(
         cfg,
