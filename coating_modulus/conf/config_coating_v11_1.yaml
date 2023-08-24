@@ -27,7 +27,7 @@ training:
   grad_agg_freq: 2
 
 batch_size:
-  initial_condition: 500
+  initial_condition: 100
   lowres_interior: 500 #4000
   highres_interior: 500
   no_slip: 100
@@ -35,5 +35,5 @@ batch_size:
   outlet: 100
   interface_left: 100 #3400
   interface_right: 500 #3400
-  interface: 5000
+  interface: 3000
   integral_continuity: 100
