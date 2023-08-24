@@ -196,7 +196,8 @@ v11_1: conf_v3
 v11_2: no sdf pressure, added monitor
 v11_3: 10_4 setting conf v11
 -gcp: conf v10_1
-v11_4: reduced conf point, 
+v11_4: reduced conf point interface focus, 
+-gcp: Lref 0.002
 '''
 
 
@@ -346,7 +347,7 @@ def run(cfg: ModulusConfig) -> None:
         nodes=nodes,
         geometry=geo,
         outvar={"u_prev_step_diff": 0, "v_prev_step_diff": 0,"p_prev_step_diff": 0, "a_prev_step_diff": 0},
-        batch_size=cfg.batch_size.highres_interior,
+        batch_size=cfg.batch_size.interfaces,
         lambda_weighting={
             "u_prev_step_diff": 100,
             "v_prev_step_diff": 100,
@@ -556,7 +557,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"normal_dot_vel": v_in*Lf},
         batch_size=3,
         integral_batch_size=cfg.batch_size.integral_continuity,
-        lambda_weighting={"normal_dot_vel": 1000.0},
+        lambda_weighting={"normal_dot_vel": 100.0},
         parameterization={Symbol("t"): (0, time_window_size), Parameter("x_pos"): (right_rx,(Lf+right_width))}
     )
     ic_domain.add_constraint(integral_continuity, "integral_continuity")
@@ -568,7 +569,7 @@ def run(cfg: ModulusConfig) -> None:
         outvar={"normal_dot_vel": v_in*Lf},
         batch_size=1,
         integral_batch_size=cfg.batch_size.integral_continuity,
-        lambda_weighting={"normal_dot_vel": 1000.0},
+        lambda_weighting={"normal_dot_vel": 100.0},
         criteria=Eq(y,H0),
         parameterization={Symbol("t"): (0, time_window_size)}
     )

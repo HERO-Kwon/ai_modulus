@@ -1,0 +1,39 @@
+defaults :
+  - modulus_default
+  - arch:
+      - fully_connected
+  - scheduler: tf_exponential_lr
+  - optimizer: adam
+  - loss: sum
+  - _self_
+
+jit: false
+
+arch:
+    fully_connected:
+        adaptive_activations: true
+
+optimizer:
+  lr: 1e-4
+
+scheduler:
+  decay_rate: 0.25
+  decay_steps: 500
+
+training:
+  rec_results_freq : 500
+  rec_constraint_freq: 500
+  max_steps : 5000
+  grad_agg_freq: 2
+
+batch_size:
+  initial_condition: 500
+  lowres_interior: 500 #4000
+  highres_interior: 500
+  no_slip: 100
+  inlet: 100
+  outlet: 100
+  interface_left: 100 #3400
+  interface_right: 500 #3400
+  interface: 5000
+  integral_continuity: 100
