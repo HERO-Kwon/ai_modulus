@@ -587,7 +587,7 @@ def run(cfg: ModulusConfig) -> None:
     
     # monitors for force, residuals and temperature
     global_monitor = PointwiseMonitor(
-        geo.sample_interior(100000),
+        geo.sample_interior(10000),
         output_names=["PDE_m","PDE_u","PDE_v","alpha"],
         metrics={
             "slurry_volume": lambda var: torch.sum(
@@ -619,7 +619,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_monitor(p_monitor)
     window_domain.add_monitor(p_monitor)
-    
+
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):
