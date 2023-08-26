@@ -224,7 +224,7 @@ class OutputA(nn.Module):
         return {"a": torch.sigmoid(in_vars["net_a"])}
 class OutputP(nn.Module):
     def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        return {"p": torch.exponential(in_vars["net_p"])}
+        return {"p": torch.exp(in_vars["net_p"])}
 class MuCalc(nn.Module):
     def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
         return {"mu": (in_vars["mu2"] + (mu1 - in_vars["mu2"]) * in_vars["a"] )}
