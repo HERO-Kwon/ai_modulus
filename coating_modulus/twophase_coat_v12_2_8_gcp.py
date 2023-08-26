@@ -359,13 +359,13 @@ def run(cfg: ModulusConfig) -> None:
     ic_highres = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"p_prev_step_diff": 0, "a_prev_step_diff": 0},
+        outvar={"u_prev_step_diff": 0,"v_prev_step_diff": 0,"net_p_prev_step_diff": 0, "net_a_prev_step_diff": 0},
         batch_size=cfg.batch_size.highres_interior,
         lambda_weighting={
-            #"u_prev_step_diff": 100,
-            #"v_prev_step_diff": 100,
-            "p_prev_step_diff": 100,
-            "a_prev_step_diff": 100,
+            "u_prev_step_diff": 100,
+            "v_prev_step_diff": 100,
+            "net_p_prev_step_diff": 100,
+            "net_a_prev_step_diff": 100,
         },
         parameterization={t_symbol: 0},
     )
