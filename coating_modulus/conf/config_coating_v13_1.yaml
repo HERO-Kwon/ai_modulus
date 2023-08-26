@@ -22,8 +22,8 @@ scheduler:
   decay_steps: 5000
 
 training:
-  rec_results_freq : 5000
-  rec_constraint_freq: 5000
+  rec_results_freq : 500
+  rec_constraint_freq: 500
   max_steps : 25000
   #grad_agg_freq: 2
 

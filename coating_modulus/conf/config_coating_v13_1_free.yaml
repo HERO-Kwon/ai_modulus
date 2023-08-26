@@ -19,12 +19,12 @@ optimizer:
 
 scheduler:
   decay_rate: 0.25
-  decay_steps: 500
+  decay_steps: 1000
 
 training:
   rec_results_freq : 500
   rec_constraint_freq: 500
-  max_steps : 2500
+  max_steps : 5000
   #grad_agg_freq: 2
 
 batch_size:
@@ -34,7 +34,7 @@ batch_size:
   no_slip: 100
   inlet: 100
   outlet: 100
-  interface_left: 50 #3400
-  interface_right: 100 #3400
-  interface: 1500 #3000
+  interface_left: 100 #3400
+  interface_right: 200 #3400
+  interface: 3000 #3000
   integral_continuity: 100

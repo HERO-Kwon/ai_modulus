@@ -213,7 +213,7 @@ v12_2_6: a p(x) output act.
 v12_2_7: tanh
 v12_2_8: p output act
 v12_2_8_gcp: free surf
-v12_2_9_gcp: conf max 2500
+v12_2_9_gcp: conf max 5000
 ''' 
 
 
@@ -313,7 +313,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo_coating,
         outvar={
             "u": 0,
-            "v": 0,#-1*v_in,
+            "v": -1*v_in,
             "p": 0,#0.6662*y/H0+7.5513,
             "a": 0,
         },
@@ -390,7 +390,7 @@ def run(cfg: ModulusConfig) -> None:
         geometry=geo,
         outvar={"u": 0, "v": -1*v_in, "a": 0},# "p": 18.45},
         batch_size=cfg.batch_size.inlet,
-        lambda_weighting={"u": 1.0, "v": 1.0, "a":1.0},# "p":1.0},
+        lambda_weighting={"u": 1.0, "v": 100.0, "a":1.0},# "p":1.0},
         criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
     )
