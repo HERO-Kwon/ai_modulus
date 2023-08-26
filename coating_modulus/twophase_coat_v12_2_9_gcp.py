@@ -243,7 +243,7 @@ class NormalDotVec(PDE):
             self.equations["normal_dot_vel"] += Abs(1-a)*Symbol(v) * n
 
 
-@modulus.main(config_path="conf", config_name="config_coating_v12_1")
+@modulus.main(config_path="conf", config_name="config_coating_v13_1_free")
 def run(cfg: ModulusConfig) -> None:
 
     # make navier stokes equations
