@@ -206,6 +206,10 @@ v12_1: running cond.
 v12_2: Lref 0.002
 v12_2_1: p inlet x
 v12_2_2_gcp: monitor 100000
+v12_2_3: lref 0.0002, p inlet x,
+v12_2_4: no intecon
+v12_2_5: default setting
+v12_2_6: a p output act.
 ''' 
 
 
@@ -398,9 +402,9 @@ def run(cfg: ModulusConfig) -> None:
     inlet = PointwiseBoundaryConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"u": 0, "v": -1*v_in, "a": 0},# "p": 18.45},
+        outvar={"u": 0, "v": -1*v_in, "a": 0, "p": 18.45},
         batch_size=cfg.batch_size.inlet,
-        lambda_weighting={"u": 1.0, "v": 1000.0, "a":1.0},# "p":1.0},
+        lambda_weighting={"u": 1.0, "v": 1000.0, "a":1.0, "p":1.0},
         criteria=And((x>0),(x<Lf),(y>0)),
         parameterization=time_range,
     )
@@ -559,7 +563,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(interface_right, name="interface_right")
     window_domain.add_constraint(interface_right, name="interface_right")
-    
+    '''
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -584,7 +588,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
-    
+    '''
     # monitors for force, residuals and temperature
     global_monitor = PointwiseMonitor(
         geo.sample_interior(500, criteria=(y<H0)),
@@ -627,8 +631,8 @@ def run(cfg: ModulusConfig) -> None:
         },
         nodes=nodes,
     )
-    ic_domain.add_monitor(p_monitor)
-    window_domain.add_monitor(p_monitor)
+    ic_domain.add_monitor(v_monitor)
+    window_domain.add_monitor(v_monitor)
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):
@@ -656,7 +660,7 @@ def run(cfg: ModulusConfig) -> None:
         grid_inference, name="time_slice_" + str(t_symbol).zfill(4)
     )
 
-    '''
+    
     vtk_obj1 = VTKUniformGrid(
         bounds=[(-1*left_width/5, (Lf+right_width/5)), (0.0, right_height/5)],
         npoints=[128, 128],
@@ -677,7 +681,7 @@ def run(cfg: ModulusConfig) -> None:
     window_domain.add_inferencer(
         grid_inference1, name="window_" + str(t_symbol).zfill(4)
     )
-    '''
+    
     
     # make solver
     slv = SequentialSolver(

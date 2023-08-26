@@ -206,16 +206,26 @@ v12_1: running cond.
 v12_2: Lref 0.002
 v12_2_1: p inlet x
 v12_2_2_gcp: monitor 100000
+v12_2_3: lref 0.0002, p inlet x,
+v12_2_4: no intecon
+v12_2_5: default setting
+v12_2_6: a p output act. 
 ''' 
 
 
 
 class AlphaConverter(nn.Module):
     def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        return {"alpha": torch.heaviside(in_vars["a"]-0.5,torch.tensor([0.0], device=in_vars["a"].device))}
+        #return {"alpha": torch.heaviside(in_vars["a"]-0.5,torch.tensor([0.0], device=in_vars["a"].device))}
+        return {"a": torch.sigmoid(in_vars["pre_a"])}
+class OutputP(nn.Module):
+    def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        #return {"alpha": torch.heaviside(in_vars["a"]-0.5,torch.tensor([0.0], device=in_vars["a"].device))}
+        return {"p": torch.exponential(in_vars["pre_p"])}
 class MuCalc(nn.Module):
     def forward(self, in_vars: Dict[str, Tensor]) -> Dict[str, Tensor]:
         return {"mu": (in_vars["mu2"] + (mu1 - in_vars["mu2"]) * in_vars["a"] )}
+
 class NormalDotVec(PDE):
     name = "NormalDotVec"
     def __init__(self, vec=["u", "v"]):
@@ -247,7 +257,7 @@ def run(cfg: ModulusConfig) -> None:
     # make network for current step and previous step
     flow_net = FullyConnectedArch(
         input_keys=[Key("x"), Key("y"), Key("t")],
-        output_keys=[Key("u"), Key("v"), Key("p"),Key("a")],
+        output_keys=[Key("u"), Key("v"), Key("p"),Key("pre_a")],
         layer_size=256,
     )
     time_window_net = MovingTimeWindowArch(flow_net, time_window_size)
@@ -255,7 +265,8 @@ def run(cfg: ModulusConfig) -> None:
     # make nodes to unroll graph on
     nodes = (ns.make_nodes() + slurry_viscosity.make_nodes()
              + normal_dot_vel.make_nodes() 
-             + [Node(['a'], ['alpha'], AlphaConverter())] 
+             + [Node(['pre_a'], ['a'], AlphaConverter())] 
+             + [Node(['pre_p'], ['p'], AlphaConverter())] 
              + [Node(['mu2','a'], ['mu'], MuCalc())] 
              + [time_window_net.make_node(name="time_window_network")])    
     # make importance model
@@ -355,13 +366,13 @@ def run(cfg: ModulusConfig) -> None:
     ic_highres = PointwiseInteriorConstraint(
         nodes=nodes,
         geometry=geo,
-        outvar={"p_prev_step_diff": 0, "a_prev_step_diff": 0},
+        outvar={"p_prev_step_diff": 0, "pre_a_prev_step_diff": 0},
         batch_size=cfg.batch_size.highres_interior,
         lambda_weighting={
             #"u_prev_step_diff": 100,
             #"v_prev_step_diff": 100,
             "p_prev_step_diff": 100,
-            "a_prev_step_diff": 100,
+            "pre_a_prev_step_diff": 100,
         },
         parameterization={t_symbol: 0},
     )
@@ -559,7 +570,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(interface_right, name="interface_right")
     window_domain.add_constraint(interface_right, name="interface_right")
-    
+    '''
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -584,14 +595,14 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
-    
+    '''
     # monitors for force, residuals and temperature
     global_monitor = PointwiseMonitor(
         geo.sample_interior(500, criteria=(y<H0)),
-        output_names=["PDE_m","PDE_u","PDE_v","alpha"],
+        output_names=["PDE_m","PDE_u","PDE_v","a"],
         metrics={
             "slurry_volume": lambda var: torch.sum(
-                var["area"] * torch.abs(1-var["alpha"])
+                var["area"] * torch.abs(1-var["a"])
             ),
             "mass_imbalance": lambda var: torch.sum(
                 var["area"] * torch.abs(var["PDE_m"])
@@ -627,8 +638,8 @@ def run(cfg: ModulusConfig) -> None:
         },
         nodes=nodes,
     )
-    ic_domain.add_monitor(p_monitor)
-    window_domain.add_monitor(p_monitor)
+    ic_domain.add_monitor(v_monitor)
+    window_domain.add_monitor(v_monitor)
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):
@@ -638,13 +649,13 @@ def run(cfg: ModulusConfig) -> None:
     vtk_obj = VTKUniformGrid(
         bounds=[(-1*left_width, (Lf+right_width)), (0.0, right_height)],
         npoints=[128, 128],
-        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "alpha":["alpha"], "mu":["mu"]},
+        export_map={"u": ["u"],"v": ["v"], "p": ["p"], "a": ["a"], "mu":["mu"]},
     )
     grid_inference = PointVTKInferencer(
         vtk_obj=vtk_obj,
         nodes=nodes,
         input_vtk_map={"x": "x", "y": "y"},
-        output_names=["u", "v", "p", "a","alpha","mu"],
+        output_names=["u", "v", "p", "a","mu"],
         #requires_grad=False,
         requires_grad=True,
         mask_fn=mask_fn,

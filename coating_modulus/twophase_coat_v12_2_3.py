@@ -206,6 +206,7 @@ v12_1: running cond.
 v12_2: Lref 0.002
 v12_2_1: p inlet x
 v12_2_2_gcp: monitor 100000
+v12_2_3: lref 0.0002, p inlet x
 ''' 
 
 
@@ -627,8 +628,8 @@ def run(cfg: ModulusConfig) -> None:
         },
         nodes=nodes,
     )
-    ic_domain.add_monitor(p_monitor)
-    window_domain.add_monitor(p_monitor)
+    ic_domain.add_monitor(v_monitor)
+    window_domain.add_monitor(v_monitor)
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):

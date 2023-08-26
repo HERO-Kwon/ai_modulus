@@ -206,6 +206,9 @@ v12_1: running cond.
 v12_2: Lref 0.002
 v12_2_1: p inlet x
 v12_2_2_gcp: monitor 100000
+v12_2_3: lref 0.0002, p inlet x,
+v12_2_4: no intecon
+v12_2_5: default setting
 ''' 
 
 
@@ -559,7 +562,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(interface_right, name="interface_right")
     window_domain.add_constraint(interface_right, name="interface_right")
-    
+    '''
     integral_continuity = IntegralBoundaryConstraint(
         nodes=nodes,
         geometry=integral_line,
@@ -584,7 +587,7 @@ def run(cfg: ModulusConfig) -> None:
     )
     ic_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
     window_domain.add_constraint(integral_continuity_in, "integral_continuity_in")
-    
+    '''
     # monitors for force, residuals and temperature
     global_monitor = PointwiseMonitor(
         geo.sample_interior(500, criteria=(y<H0)),
@@ -627,8 +630,8 @@ def run(cfg: ModulusConfig) -> None:
         },
         nodes=nodes,
     )
-    ic_domain.add_monitor(p_monitor)
-    window_domain.add_monitor(p_monitor)
+    ic_domain.add_monitor(v_monitor)
+    window_domain.add_monitor(v_monitor)
     # add inference data for time slices
     #for i, specific_time in enumerate(np.linspace(0, time_window_size, 10)):
     def mask_fn(x, y):

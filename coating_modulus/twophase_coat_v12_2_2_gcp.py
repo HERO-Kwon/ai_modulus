@@ -205,7 +205,7 @@ v11_6: 10_4 setting
 v12_1: running cond.
 v12_2: Lref 0.002
 v12_2_1: p inlet x
-v12_2_2_gcp: monitor 100000
+v12_2_2_gcp: monitor 1000
 ''' 
 
 
